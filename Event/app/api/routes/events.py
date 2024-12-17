@@ -5,12 +5,15 @@ from typing import List
 from app.models import EventOut, EventCreate, EventUpdate
 from app.crud import create_event, get_events, get_event, update_event, delete_event
 from app.api.deps import get_db
+from app.utils import validate_user
 
 router = APIRouter()
 
 # Create a new event
 @router.post("/", response_model=EventOut)
 def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
+    # Validate organizer ID from the Authentication microservice
+    validate_user(event.organizer_id)
     return create_event(db=db, event=event)
 
 # Get all events
