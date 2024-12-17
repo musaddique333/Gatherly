@@ -1,8 +1,10 @@
 import httpx
 from fastapi import HTTPException
 from app.core.config import settings
+import os
 
-AUTH_SERVICE_URL = "http://127.0.0.1:8000"  # Adjust to your Authentication service URL
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://127.0.0.1:8000")
+
 
 def validate_user(user_id: int):
     url = f"{AUTH_SERVICE_URL}/users/{user_id}"  # Replace with the actual endpoint for user retrieval
