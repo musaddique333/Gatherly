@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     DB_NAME: str = os.getenv("DB_NAME")
 
     # Email verification env variables
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
     SMTP_SERVER: str = os.getenv("SMTP_SERVER")
     SMTP_PORT: int = os.getenv("SMTP_PORT")
     SMTP_USER: str = os.getenv("SMTP_USER")
