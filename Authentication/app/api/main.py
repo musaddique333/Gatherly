@@ -5,4 +5,3 @@ app = FastAPI()
 
 # Include the aggregated router from routes/__init__.py
 app.include_router(api_router)
-

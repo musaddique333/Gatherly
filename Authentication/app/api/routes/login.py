@@ -1,18 +1,14 @@
 from fastapi import Depends, HTTPException, APIRouter, Request
-from fastapi.security import OAuth2PasswordRequestForm
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.models import IndividualSignUp, CorporateSignUp, IndividualUser, CorporateUser
+from app.models import IndividualSignUp
+from app.crud import create_user, get_user_by_email
 from app.utils import *
 from app.core.security import hash_password, verify_password, create_access_token
-from app.core.config import settings
 from datetime import timedelta
 
 router = APIRouter()
-
-serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
 
 # Signup route for individual users
 @router.post("/signup")
@@ -27,12 +23,7 @@ def signup_individual(user: IndividualSignUp, request: Request, db: Session = De
     hashed_password = hash_password(user.password)
 
     # Create new individual user
-    db_user = IndividualUser(
-        username=user.username, 
-        email=user.email, 
-        phone_number=user.phone_number, 
-        hashed_password=hashed_password
-    )
+    db_user = create_user(user, hashed_password, db)
 
     # Add to Supabase PostgreSQL
     db.add(db_user)
@@ -40,7 +31,7 @@ def signup_individual(user: IndividualSignUp, request: Request, db: Session = De
     db.refresh(db_user)
 
     # Generate verification token
-    token = serializer.dumps(user.email, salt="email-verification")
+    token = generate_verification_token(user.email)
     verification_link = str(request.url_for("verify-email")) + f"?token={token}"
 
     # Send verification email
@@ -54,11 +45,8 @@ def signup_individual(user: IndividualSignUp, request: Request, db: Session = De
 
 @router.post("/resend-verification-email")
 def resend_verification_email(email: str, request: Request, db: Session = Depends(get_db)):
-    """
-    Resend the email verification link to the user.
-    """
     # Check if the user exists in the database
-    user = db.query(IndividualUser).filter(IndividualUser.email == email).first()
+    user = get_user_by_email(email, db)
 
     if not user:
         raise HTTPException(
@@ -74,7 +62,7 @@ def resend_verification_email(email: str, request: Request, db: Session = Depend
     # Check if token exists or has expired
     try:
         # Generate a new verification link
-        token = serializer.dumps(email, salt="email-verification")
+        token = generate_verification_token(email)
         verification_link = str(request.url_for("verify-email")) + f"?token={token}"
 
         # Resend the verification email
@@ -89,14 +77,9 @@ def resend_verification_email(email: str, request: Request, db: Session = Depend
 @router.get("/verify-email", name="verify-email")
 def verify_email(token: str, db: Session = Depends(get_db)):
 
-    try:
-        email = serializer.loads(token, salt="email-verification", max_age=600)
-    except SignatureExpired:
-        raise HTTPException(status_code=400, detail="The verification link has expired.")
-    except BadSignature:
-        raise HTTPException(status_code=400, detail="Invalid verification link.")
-    
-    user = db.query(IndividualUser).filter(IndividualUser.email == email).first()
+    email = decode_verification_token(token)
+
+    user = get_user_by_email(email, db)
     
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -112,10 +95,29 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     # For simplicity, let’s assume we just return a success message
     return {"message": f"Email {email} verified successfully!"}
 
+# Route to validate user by email
+@router.get("/validate-user/{email}")
+def validate_user(email: str, db: Session = Depends(get_db)):
+    user = get_user_by_email(email, db)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    
+    # Check if email is verified
+    if not user.is_email_verified:
+        raise HTTPException(status_code=403, detail="Email not verified. Please verify your email to proceed.")
+    
+    # Check if phone number is verified
+    if not user.is_phone_verified:
+        raise HTTPException(status_code=403, detail="Phone number not verified. Please verify your phone number to proceed.")
+    
+    return {"message": f"User {email} is valid and verified."}
+
+
 # Login route for individual users
 @router.post("/login")
 def login_individual(email: str, password: str, db: Session = Depends(get_db)):
-    user = db.query(IndividualUser).filter(IndividualUser.email == email).first()
+    user = get_user_by_email(email, db)
 
     if not user.is_email_verified:
         raise HTTPException(status_code=403, detail="Email not verified. Please verify your email to proceed.")
@@ -128,47 +130,6 @@ def login_individual(email: str, password: str, db: Session = Depends(get_db)):
     
     access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
-
-# Signup route for corporate users
-@router.post("/signup-corporate")
-def signup_corporate(user: CorporateSignUp, db: Session = Depends(get_db)):
-    # Validate corporate email
-    is_corporate_email(user.corporate_email)
-    
-    # Hash password
-    hashed_password = hash_password(user.password)
-
-    # Create new corporate user
-    db_user = CorporateUser(
-        corporate_email=user.corporate_email,
-        contact_person=user.contact_person,
-        company_name=user.company_name,
-        hashed_password=hashed_password
-    )
-    
-    # Add to Supabase PostgreSQL
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    return {"message": f"Corporate user {user.company_name} signed up successfully"}
-
-
-# Login route for corporate users
-@router.post("/login-corporate")
-def login_corporate(corporate_email: str, password: str, db: Session = Depends(get_db)):
-    user = db.query(CorporateUser).filter(CorporateUser.corporate_email == corporate_email).first()
-    
-    if not user or not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.corporate_email}, expires_delta=access_token_expires)
     
     return {
         "access_token": access_token,
