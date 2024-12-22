@@ -21,13 +21,29 @@ def is_valid_phone_number(phone_number: str):
     return True
 
 # Email utility
-def send_verification_email(to_email: str, verification_link: str):
+def send_verification_email(to_username:str, to_email: str, verification_link: str):
     msg = MIMEMultipart()
-    msg['From'] = settings.EMAIL_FROM
-    msg['To'] = to_email
-    msg['Subject'] = 'Verify your email to register into Tag-ID'
+    msg['From'] = 'Dodgygeezers.co<' + settings.EMAIL_FROM + '>'
+    msg['To'] = to_username + '<' + to_email + '>'
+    msg['Subject'] = 'Verify your email to register into dodgygeezers'
 
-    body = f'Click on the link to verify your email: {verification_link}'
+    body = f"""
+    Hello,
+
+    Thank you for registering with DodgyGeezers! We're excited to have you on board.
+
+    To complete your registration, please verify your email address by clicking the link below:
+
+    {verification_link}
+
+    If you did not sign up for this account, please ignore this email. If you have any questions or need assistance, feel free to reach out to us.
+
+    Best regards,
+    The DodgyGeezers Team
+
+    If the button above doesn't work, please copy and paste the following URL into your browser:
+    {verification_link}
+    """
     msg.attach(MIMEText(body, 'plain'))
 
     with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
@@ -53,6 +69,7 @@ def validate_password_strength(password: str):
         raise HTTPException(status_code=400, detail="Password must contain at least one special character (@, $, !, %, *, ?, &).")
 
     return True
+
 # Phone Number utility
 def send_sms(phone_number: str, message: str):
     #NOTE: Twilio or another service to send SMS
