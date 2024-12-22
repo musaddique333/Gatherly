@@ -1,93 +1,221 @@
-# DodgyGeezers
+# FastAPI Auth
 
+This repository contains a **FastAPI** application designed for scalable development and deployment. It includes Docker setup for containerization, a development environment with Docker Compose, and guidelines for local development.
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/Ritz1110/DodgyGeezers.git
-git branch -M main
-git push -uf origin main
+.
+├── app
+│   ├── api                # API routes and dependencies
+│   ├── core               # Core utilities like config, DB setup, and security
+│   ├── crud.py            # CRUD operations
+│   ├── main.py            # Application entry point
+│   ├── models.py          # Database models
+│   └── utils.py           # Utility functions
+├── Dockerfile             # Docker container setup
+├── docker-compose.dev.yml # Docker Compose for development
+├── .dockerignore          # Exclusions for Docker builds
+├── .env.development       # Environment variables for development
+├── .env.production        # Environment variables for production
+├── pyproject.toml         # Python dependencies and project metadata
+├── .python-version        # Python version specification
+└── uv.lock                # Dependency lock file
 ```
 
-## Integrate with your tools
+---
+## Using Docker
 
-- [ ] [Set up project integrations](https://gitlab.com/Ritz1110/DodgyGeezers/-/settings/integrations)
+## Debugging with VS Code
 
-## Collaborate with your team
+For seamless debugging, set up a `.vscode/launch.json` file:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+1. Create a `.vscode` folder in the root directory.
+2. Inside `.vscode`, create a `launch.json` file with the following content:
 
-## Test and Deploy
+    ```json
+    {
+      "version": "0.2.0",
+      "configurations": [
+        {
+          "name": "Python: Remote Attach",
+          "type": "python",
+          "request": "attach",
+          "connect": {
+            "host": "localhost",
+            "port": 5678
+          },
+          "pathMappings": [
+            {
+              "localRoot": "${workspaceFolder}/Event/app",
+              "remoteRoot": "/app/app"
+            }
+          ],
+          "justMyCode": true
+        }
+      ]
+    }
+    ```
 
-Use the built-in continuous integration in GitLab.
+3. Attach the debugger to the running container.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+---
 
-***
+## Environment Variables
 
-# Editing this README
+Here's the updated **Environment Variables** section based on your provided details:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+---
 
-## Suggestions for a good README
+### 2. Environment Variables
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+You can configure environment-specific variables for both **development** and **production** in the following `.env` files:
 
-## Name
-Choose a self-explaining name for your project.
+- **`.env.development`**: Development-specific variables.
+- **`.env.production`**: Production-specific variables.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+#### **Development Environment (`.env.development`)**
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```dotenv
+# JWT settings
+JWT_SECRET_KEY=your-secret-key
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+# Email verification credentials
+SMTP_SERVER=
+SMTP_PORT=587  # NOTE: Use 465 for SSL
+SMTP_USER=
+SMTP_PASSWORD=
+EMAIL_FROM=
+RECOVERY_CODE=
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+# Users Database credentials
+DB_USER=postgres
+DB_PASSWORD=test
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=postgres
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+# FastAPI
+DEBUG=1
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+#### **Production Environment (`.env.production`)**
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```dotenv
+# JWT settings
+JWT_SECRET_KEY=
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Email verification credentials
+SMTP_SERVER="smtp.example.com"
+SMTP_PORT=587  # NOTE: Use 465 for SSL
+SMTP_USER="your_email@example.com"
+SMTP_PASSWORD="your_password"
+EMAIL_FROM="your_email@example.com"
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+# Users Database credentials
+DB_USER=
+DB_PASSWORD=
+DB_HOST=
+DB_PORT=
+DB_NAME=
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+---
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+#### **Explanation of Variables:**
 
-## License
-For open source projects, say how it is licensed.
+- **JWT Settings**:
+  - `JWT_SECRET_KEY`: The secret key used to sign the JWT tokens.
+  - `JWT_ALGORITHM`: The algorithm used for JWT signing (usually `HS256`).
+  - `ACCESS_TOKEN_EXPIRE_MINUTES`: The expiration time for access tokens in minutes.
+  
+- **Email Verification Credentials**:
+  - `SMTP_SERVER`: The SMTP server address for sending emails.
+  - `SMTP_PORT`: The port for the SMTP server (587 for TLS, 465 for SSL).
+  - `SMTP_USER`: The email address used for sending verification emails.
+  - `SMTP_PASSWORD`: The password for the email address.
+  - `EMAIL_FROM`: The "from" email address used in email communication.
+  - `RECOVERY_CODE`: A predefined code for account recovery or password reset.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- **Users Database Credentials**:
+  - `DB_USER`: The database username (e.g., `postgres`).
+  - `DB_PASSWORD`: The database password.
+  - `DB_HOST`: The database host (usually `localhost` in development).
+  - `DB_PORT`: The database port (default `5432` for PostgreSQL).
+  - `DB_NAME`: The database name (e.g., `postgres`).
+
+- **FastAPI**:
+  - `DEBUG`: A flag to enable or disable debug mode (set to `1` in development).
+
+Ensure sensitive data is not committed to version control by including `.env` files in `.gitignore`.
+
+### 3. Building and Running the Application
+Docker simplifies the development workflow. Use **Docker Compose** for managing services in the development environment.
+
+- **To build and run:**
+  ```bash
+  docker compose -f docker-compose.dev.yml up --build -d #after this run your debugger you start the api
+  ```
+
+- **To stop and clean up:**
+  ```bash
+  docker compose -f docker-compose.dev.yml down --volumes --remove-orphans --rmi all
+  ```
+
+---
+
+
+## **!!!Installing UV if Developing Without DOCKER**
+
+UV can be installed using multiple methods depending on your operating system. Here are the recommended approaches:
+
+**macOS and Linux:**
+- Install UV using the official standalone installer:
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+**Windows:**
+- Install UV using the official standalone installer:
+  ```powershell
+  powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+For more installation methods (e.g., Homebrew), refer to the [UV Installation Page](https://github.com/jmcdo29/uv#installation).
+
+---
+
+#### **Setting Up the Virtual Environment**
+1. After installing UV, sync the dependencies:
+   ```bash
+   uv sync
+   ```
+   This will create a virtual environment (`.venv`) and install all dependencies listed in the `pyproject.toml` file.
+
+2. Activate the virtual environment:
+   ```bash
+   source .venv/bin/activate  # For macOS/Linux
+   .venv\Scripts\activate     # For Windows
+   ```
+
+### 2. Development Mode
+Run the application locally for development.
+
+- Activate the virtual environment:
+  ```bash
+  source .venv/bin/activate
+  ```
+
+- Start the application:
+  ```bash
+  uvicorn app.main:app --reload
+  ```
+
+---
+
+## Contributions
+
+Feel free to open issues or submit pull requests for improvements. Follow the project's style and structure for consistency.
