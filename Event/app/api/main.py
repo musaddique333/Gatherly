@@ -1,7 +1,7 @@
-from fastapi import APIRouter
-from app.api.routes import events
+from fastapi import FastAPI
+from app.api.routes import router as api_router
 
-api_router = APIRouter()
+app = FastAPI()
 
-# Include event-related routes
-api_router.include_router(events.router, prefix="/events", tags=["events"])
+# Include the aggregated router from routes/__init__.py
+app.include_router(api_router)

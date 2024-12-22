@@ -4,7 +4,7 @@ from typing import List
 
 from app.models import EventOut, EventCreate, EventUpdate
 from app.crud import create_event, get_events, get_event, update_event, delete_event
-from app.api.deps import get_db
+from app.core.db import get_db
 from app.utils import validate_user
 
 router = APIRouter()

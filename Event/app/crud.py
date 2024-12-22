@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import Event
-from app.models import EventCreate, EventUpdate
+from app.models import EventMember, Event, EventCreate, EventUpdate
 
 # Create a new event
 def create_event(db: Session, event: EventCreate):
@@ -46,3 +45,35 @@ def delete_event(db: Session, event_id: int):
     db.delete(db_event)
     db.commit()
     return db_event
+
+# Add a member to an event
+def add_event_member(db: Session, event_id: int, user_email: str):
+    # Check if the event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        return None
+
+    # Create and add the member
+    event_member = EventMember(event_id=event_id, user_email=user_email)
+    db.add(event_member)
+    db.commit()
+    db.refresh(event_member)
+    return event_member
+
+# Remove a member from an event
+def remove_event_member(db: Session, event_id: int, user_email: str):
+    event_member = (
+        db.query(EventMember)
+        .filter(EventMember.event_id == event_id, EventMember.user_email == user_email)
+        .first()
+    )
+    if not event_member:
+        return None
+
+    db.delete(event_member)
+    db.commit()
+    return event_member
+
+# Get members of an event
+def get_event_members(db: Session, event_id: int):
+    return db.query(EventMember).filter(EventMember.event_id == event_id).all()
