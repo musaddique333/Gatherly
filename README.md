@@ -47,7 +47,7 @@ For seamless debugging, set up a `.vscode/launch.json` file:
           },
           "pathMappings": [
             {
-              "localRoot": "${workspaceFolder}/app",
+              "localRoot": "${workspaceFolder}/Authentication/app",
               "remoteRoot": "/app/app"
             }
           ],
@@ -158,7 +158,7 @@ Docker simplifies the development workflow. Use **Docker Compose** for managing 
 
 - **To build and run:**
   ```bash
-  docker compose -f docker-compose.dev.yml up --build
+  docker compose -f docker-compose.dev.yml up --build -d #after this run your debugger you start the api
   ```
 
 - **To stop and clean up:**
