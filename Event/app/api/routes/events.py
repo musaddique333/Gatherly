@@ -13,7 +13,10 @@ router = APIRouter()
 @router.post("/", response_model=EventOut)
 def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
     # Validate organizer ID from the Authentication microservice
-    validate_user(event.organizer_id)
+    try:
+        validate_user(event.organizer_email)
+    except HTTPException as e:
+        raise e 
     return create_event(db=db, event=event)
 
 # Get all events

@@ -3,11 +3,11 @@ from fastapi import HTTPException
 from app.core.config import settings
 import os
 
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://127.0.0.1:8000")
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://registration:8000")
 
 
-def validate_user(user_id: int):
-    url = f"{AUTH_SERVICE_URL}/users/{user_id}"  # Replace with the actual endpoint for user retrieval
+def validate_user(email: str):
+    url = f"{AUTH_SERVICE_URL}/auth/validate-user/{email}"  # Replace with the actual endpoint for user retrieval
     try:
         response = httpx.get(url)
         if response.status_code != 200:

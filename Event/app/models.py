@@ -47,10 +47,6 @@ class EventMember(Base):
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False, index=True)
     user_email = Column(String, nullable=False, index=True)
 
-    event = relationship("Event", back_populates="members")  # Relationship back to Event
-
-    __table_args__ = (UniqueConstraint("event_id", "user_email", name="unique_event_user"),)
-
 class EventMemberBase(BaseModel):
     event_id: int
     user_email: EmailStr
