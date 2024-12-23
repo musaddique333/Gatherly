@@ -1,0 +1,43 @@
+services:
+  event-service:
+      # restart: "no"
+    ports:
+      - 8001:8001
+      - 5679:5679
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: event-service
+    volumes:
+    - ./app:/app/app
+    - ./pyproject.toml:/app/pyproject.toml
+    - ./uv.lock:/app/uv.lock
+    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
+    command:
+      - python3
+      - -Xfrozen_modules=off
+      - -m
+      - debugpy
+      - --listen
+      - 0.0.0.0:5679
+      - --wait-for-client
+      - -m
+      - uvicorn
+      - app.main:app
+      - --reload
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8001"
+    env_file:
+      - .env.development
+    environment:
+      - DB_HOST=postgres
+      - PYDEVD_DISABLE_FILE_VALIDATION=1
+    networks:
+      - dodgygeezers_test
+
+networks:
+  dodgygeezers_test:
+    # driver: bridge
+    external: true
