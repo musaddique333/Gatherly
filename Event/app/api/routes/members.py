@@ -9,33 +9,24 @@ from app.utils import validate_user
 
 router = APIRouter()
 
-# Add a member to an event
+# Add a member to an event (only if the user is the organizer)
 @router.post("/", response_model=EventMemberOut)
-def add_member_to_event(member: EventMemberCreate, db: Session = Depends(get_db)):
+def add_member_to_event(member: EventMemberCreate, organizer_email: str, db: Session = Depends(get_db)):
     try:
         validate_user(member.user_email)
     except HTTPException as e:
         raise e
     
-    db_member = add_event_member(db=db, event_id=member.event_id, user_email=member.user_email)
-    if not db_member:
-        raise HTTPException(status_code=404, detail="Event not found")
+    db_member = add_event_member(db=db, event_id=member.event_id, user_email=member.user_email, organizer_email=organizer_email)
     return db_member
 
-# Remove a member from an event
+# Remove a member from an event (only if the user is the organizer)
 @router.delete("/", response_model=EventMemberOut)
-def remove_member_from_event(event_id: int, user_email: str, db: Session = Depends(get_db)):
-    db_member = remove_event_member(db=db, event_id=event_id, user_email=user_email)
-    if not db_member:
-        raise HTTPException(status_code=404, detail="Member not found")
+def remove_member_from_event(event_id: int, user_email: str, organizer_email: str, db: Session = Depends(get_db)):
+    db_member = remove_event_member(db=db, event_id=event_id, user_email=user_email, organizer_email=organizer_email)
     return db_member
 
-# Get members of an event
+# Get members of an event (no restriction, any user can see members if they have access)
 @router.get("/{event_id}/members", response_model=List[EventMemberOut])
-def get_event_members_route(event_id: int, db: Session = Depends(get_db)):
-    return get_event_members(db=db, event_id=event_id)
-
-# # Get events of a member
-# @router.get("/{event_id}/members", response_model=List[EventMemberOut])
-# def get_member_events_route(user_email: str, db: Session = Depends(get_db)):
-#     return get_member_events(db=db, user_email=user_email)
+def get_event_members_route(event_id: int, user_email: str, db: Session = Depends(get_db)):
+    return get_event_members(db=db, event_id=event_id, user_email=user_email)

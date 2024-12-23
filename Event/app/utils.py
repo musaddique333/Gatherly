@@ -7,7 +7,7 @@ AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://registration:8000")
 
 
 def validate_user(email: str):
-    url = f"{AUTH_SERVICE_URL}/auth/validate-user/{email}"  # Replace with the actual endpoint for user retrieval
+    url = f"{AUTH_SERVICE_URL}/auth/validate-user/{email}"
     try:
         response = httpx.get(url)
         if response.status_code != 200:

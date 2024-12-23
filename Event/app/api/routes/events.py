@@ -19,31 +19,24 @@ def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
         raise e 
     return create_event(db=db, event=event)
 
-# Get all events
+# Get all events that the user is a member of
 @router.get("/", response_model=List[EventOut])
-def read_events(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return get_events(db=db, skip=skip, limit=limit)
+def read_events(user_email: str, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return get_events(db=db, user_email=user_email, skip=skip, limit=limit)
 
-# Get a single event by ID
+# Get a single event by its ID (only if the user is a member)
 @router.get("/{event_id}", response_model=EventOut)
-def read_event(event_id: int, db: Session = Depends(get_db)):
-    db_event = get_event(db=db, event_id=event_id)
-    if not db_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return db_event
+def read_event(event_id: int, user_email: str, db: Session = Depends(get_db)):
+    return get_event(db=db, event_id=event_id, user_email=user_email)
 
-# Update an existing event
+# Update an existing event by its ID (only if the user is the organizer)
 @router.put("/{event_id}", response_model=EventOut)
-def update_existing_event(event_id: int, event: EventUpdate, db: Session = Depends(get_db)):
-    updated_event = update_event(db=db, event_id=event_id, event=event)
-    if not updated_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return updated_event
+def update_existing_event(event_id: int, event: EventUpdate, user_email: str, db: Session = Depends(get_db)):
+    return update_event(db=db, event_id=event_id, event=event, user_email=user_email)
 
-# Delete an event
+# Delete an event by its ID
+# Delete an event by its ID (only by organizer)
 @router.delete("/{event_id}", response_model=EventOut)
-def delete_existing_event(event_id: int, db: Session = Depends(get_db)):
-    deleted_event = delete_event(db=db, event_id=event_id)
-    if not deleted_event:
-        raise HTTPException(status_code=404, detail="Event not found")
+def delete_existing_event(event_id: int, user_email: str, db: Session = Depends(get_db)):
+    deleted_event = delete_event(db=db, event_id=event_id, user_email=user_email)
     return deleted_event

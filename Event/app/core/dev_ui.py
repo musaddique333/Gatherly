@@ -4,7 +4,7 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.style import Style
 
-def print_ui(module_name="app.main", app_import_string="app.main:app", dev_mode_url="http://localhost:8000"):
+def print_ui(module_name="app.main", app_import_string="app.main:app", dev_mode_url="http://localhost:8001"):
     """
     Prints the formatted terminal UI for the module.
 
