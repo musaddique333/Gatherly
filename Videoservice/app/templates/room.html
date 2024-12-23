@@ -75,6 +75,13 @@
             };
         }
 
+        function displayMessage(from, message, timestamp = null) {
+            const chatBox = document.getElementById("chatBox");
+            const timeStr = timestamp ? `[${timestamp}] ` : '';
+            chatBox.innerHTML += `<p>${timeStr}${from}: ${message}</p>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
         async function startCall() {
             try {
                 if (!localStream) {
@@ -85,7 +92,7 @@
 
                 ws.onmessage = async (message) => {
                     const data = JSON.parse(message.data);
-                    const { type, from, to, offer, answer, candidate, message: chatMessage } = data;
+                    const { type, from, to, offer, answer, candidate, message: chatMessage, messages, timestamp } = data;
 
                     // Ignore messages from self
                     if (from === userId) return;
@@ -114,9 +121,7 @@
                             break;
 
                         case "chat-message":
-                            const chatBox = document.getElementById("chatBox");
-                            chatBox.innerHTML += `<p>${from}: ${chatMessage}</p>`;
-                            chatBox.scrollTop = chatBox.scrollHeight;
+                            displayMessage(from, chatMessage, timestamp);
                             break;
 
                         case "new-user":
@@ -127,6 +132,14 @@
                                 ws.send(JSON.stringify({ type: "offer", from: userId, to: from, offer }));
                             }
                             break;
+                        
+                        case "chat-history":
+                            document.getElementById("chatBox").innerHTML = "";
+                                // Display all messages from history
+                                messages.forEach(msg => {
+                                    displayMessage(msg.from, msg.message, msg.timestamp);
+                                });
+                                break;
 
                         case "user-disconnected":
                             removeVideo(`remote-${from}`);
@@ -191,12 +204,20 @@
                 videoElement.remove();
             }
         }
-
         document.getElementById("chatInput").addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 const chatMessage = event.target.value.trim();
                 if (chatMessage) {
-                    ws.send(JSON.stringify({ type: "chat-message", from: userId, message: chatMessage }));
+                    const messageData = {
+                        type: "chat-message",
+                        from: userId,
+                        message: chatMessage,
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+                    // Display message immediately
+                    displayMessage(userId, chatMessage, messageData.timestamp);
+                    // Send to others
+                    ws.send(JSON.stringify(messageData));
                     event.target.value = "";
                 }
             }

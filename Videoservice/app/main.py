@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from typing import Dict, List
 import json
+from datetime import datetime
 
 app = FastAPI()
 
@@ -14,21 +15,49 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 class ConnectionManager:
     def __init__(self):
         self.rooms: Dict[str, Dict[str, WebSocket]] = {}  # room -> {user_id -> websocket}
+        self.room_messages: Dict[str, List[Dict]] = {}    # room -> list of messages
 
     async def connect(self, room: str, user_id: str, websocket: WebSocket):
         await websocket.accept()
         if room not in self.rooms:
             self.rooms[room] = {}
+        if room not in self.room_messages:
+            self.room_messages[room] = []
         self.rooms[room][user_id] = websocket
+        
+        # Send chat history to newly connected user
+        if self.room_messages[room]:
+            history_message = json.dumps({
+                "type": "chat-history",
+                "messages": self.room_messages[room]
+            })
+            await websocket.send_text(history_message)
 
     def disconnect(self, room: str, user_id: str):
         if room in self.rooms and user_id in self.rooms[room]:
             del self.rooms[room][user_id]
             if not self.rooms[room]:
+                # If room is empty, clear chat history
+                if room in self.room_messages:
+                    del self.room_messages[room]
                 del self.rooms[room]
+
+    def store_message(self, room: str, message_data: Dict):
+        if room not in self.room_messages:
+            self.room_messages[room] = []
+        
+        # Add timestamp to message
+        message_data["timestamp"] = datetime.now().strftime("%H:%M:%S")
+        self.room_messages[room].append(message_data)
 
     async def send_message_to_room(self, room: str, message: str, exclude_user: str = None):
         if room in self.rooms:
+            message_data = json.loads(message)
+            
+            # Store chat messages (not signaling messages)
+            if message_data.get("type") == "chat-message":
+                self.store_message(room, message_data)
+            
             for user_id, connection in self.rooms[room].items():
                 if exclude_user is None or user_id != exclude_user:
                     await connection.send_text(message)
@@ -56,7 +85,6 @@ async def signaling_endpoint(websocket: WebSocket, room_name: str, user_id: str)
             await manager.send_message_to_room(room_name, data)
     except WebSocketDisconnect:
         manager.disconnect(room_name, user_id)
-        # Notify other users in the room about the disconnection
         disconnect_message = json.dumps({
             "type": "user-disconnected",
             "from": user_id
