@@ -28,69 +28,125 @@
 <body>
     <h1>Room: {{ room_name }}</h1>
     <div id="videos">
-        <video id="localVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
     </div>
     <input type="text" id="chatInput" placeholder="Type a message and press Enter">
     <div id="chatBox"></div>
 
     <script>
         const roomName = "{{ room_name }}";
-        const userId = Math.random().toString(36).substring(2, 8); // Generate a random user ID
+        const userId = Math.random().toString(36).substring(2, 8);
         const signalingServer = `ws://localhost:8000/ws/${roomName}/${userId}`;
-        const ws = new WebSocket(signalingServer);
-
+        let ws;
         let localStream;
-        let peerConnections = {}; // Map of peer connections for each user
+        let peerConnections = {};
+        const existingUsers = new Set();
         const configuration = {
             iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
         };
 
-        ws.onopen = () => {
-            console.log("Connected to signaling server");
-            startCall();
+        // Clean up function to handle page refresh/close
+        window.onbeforeunload = () => {
+            // Close all peer connections
+            Object.values(peerConnections).forEach(pc => pc.close());
+            // Close WebSocket connection
+            if (ws) ws.close();
+            // Stop all tracks in local stream
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
         };
+
+        function connectWebSocket() {
+            ws = new WebSocket(signalingServer);
+
+            ws.onopen = () => {
+                console.log("Connected to signaling server");
+                startCall();
+            };
+
+            ws.onclose = () => {
+                console.log("WebSocket connection closed. Attempting to reconnect...");
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+        }
 
         async function startCall() {
             try {
-                // Access user's media devices
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-                const localVideo = document.getElementById("localVideo");
-                localVideo.srcObject = localStream;
+                if (!localStream) {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                    const localVideo = document.getElementById("localVideo");
+                    localVideo.srcObject = localStream;
+                }
 
                 ws.onmessage = async (message) => {
                     const data = JSON.parse(message.data);
-                    const { type, from, offer, answer, candidate, message: chatMessage } = data;
+                    const { type, from, to, offer, answer, candidate, message: chatMessage } = data;
 
-                    if (type === "offer" && !peerConnections[from]) {
-                        const pc = createPeerConnection(from);
-                        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                        const answer = await pc.createAnswer();
-                        await pc.setLocalDescription(answer);
-                        ws.send(JSON.stringify({ type: "answer", from: userId, to: from, answer }));
-                    } else if (type === "answer" && peerConnections[from]) {
-                        await peerConnections[from].setRemoteDescription(new RTCSessionDescription(answer));
-                    } else if (type === "ice-candidate" && peerConnections[from]) {
-                        await peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate));
-                    } else if (type === "chat-message") {
-                        const chatBox = document.getElementById("chatBox");
-                        chatBox.innerHTML += `<p>${from}: ${chatMessage}</p>`;
-                    } else if (type === "new-user" && from !== userId) {
-                        // Create a new connection to the newly joined user
-                        const pc = createPeerConnection(from);
-                        const offer = await pc.createOffer();
-                        await pc.setLocalDescription(offer);
-                        ws.send(JSON.stringify({ type: "offer", from: userId, to: from, offer }));
+                    // Ignore messages from self
+                    if (from === userId) return;
+
+                    switch (type) {
+                        case "offer":
+                            if (!peerConnections[from]) {
+                                const pc = await createPeerConnection(from);
+                                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                                const answer = await pc.createAnswer();
+                                await pc.setLocalDescription(answer);
+                                ws.send(JSON.stringify({ type: "answer", from: userId, to: from, answer }));
+                            }
+                            break;
+
+                        case "answer":
+                            if (peerConnections[from]) {
+                                await peerConnections[from].setRemoteDescription(new RTCSessionDescription(answer));
+                            }
+                            break;
+
+                        case "ice-candidate":
+                            if (peerConnections[from]) {
+                                await peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate));
+                            }
+                            break;
+
+                        case "chat-message":
+                            const chatBox = document.getElementById("chatBox");
+                            chatBox.innerHTML += `<p>${from}: ${chatMessage}</p>`;
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                            break;
+
+                        case "new-user":
+                            if (!peerConnections[from]) {
+                                const pc = await createPeerConnection(from);
+                                const offer = await pc.createOffer();
+                                await pc.setLocalDescription(offer);
+                                ws.send(JSON.stringify({ type: "offer", from: userId, to: from, offer }));
+                            }
+                            break;
+
+                        case "user-disconnected":
+                            removeVideo(`remote-${from}`);
+                            if (peerConnections[from]) {
+                                peerConnections[from].close();
+                                delete peerConnections[from];
+                            }
+                            existingUsers.delete(from);
+                            break;
                     }
                 };
 
                 // Notify others of your presence
                 ws.send(JSON.stringify({ type: "new-user", from: userId }));
             } catch (error) {
-                console.error("Error accessing media devices:", error);
+                console.error("Error in startCall:", error);
             }
         }
 
-        function createPeerConnection(remoteUserId) {
+        async function createPeerConnection(remoteUserId) {
             const pc = new RTCPeerConnection(configuration);
             peerConnections[remoteUserId] = pc;
 
@@ -106,22 +162,33 @@
             };
 
             pc.ontrack = (event) => {
-                addVideoStream(event.streams[0], `remote-${remoteUserId}`);
+                if (!existingUsers.has(remoteUserId)) {
+                    addVideoStream(event.streams[0], `remote-${remoteUserId}`);
+                    existingUsers.add(remoteUserId);
+                }
             };
 
-            // Add local media tracks to the connection
-            localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+            // Add local tracks to the connection
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            
             return pc;
         }
 
         function addVideoStream(stream, id) {
-            if (!document.getElementById(id)) {
-                const videoElement = document.createElement("video");
-                videoElement.id = id;
-                videoElement.autoplay = true;
-                videoElement.playsinline = true;
-                videoElement.srcObject = stream;
-                document.getElementById("videos").appendChild(videoElement);
+            removeVideo(id); // Remove any existing video element with the same ID
+            const videoElement = document.createElement("video");
+            videoElement.id = id;
+            videoElement.autoplay = true;
+            videoElement.playsinline = true;
+            videoElement.srcObject = stream;
+            document.getElementById("videos").appendChild(videoElement);
+        }
+
+        function removeVideo(id) {
+            const videoElement = document.getElementById(id);
+            if (videoElement) {
+                videoElement.srcObject = null;
+                videoElement.remove();
             }
         }
 
@@ -130,10 +197,13 @@
                 const chatMessage = event.target.value.trim();
                 if (chatMessage) {
                     ws.send(JSON.stringify({ type: "chat-message", from: userId, message: chatMessage }));
-                    event.target.value = ""; // Clear input
+                    event.target.value = "";
                 }
             }
         });
+
+        // Start the WebSocket connection
+        connectWebSocket();
     </script>
 </body>
 </html>

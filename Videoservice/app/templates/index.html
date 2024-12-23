@@ -15,10 +15,9 @@
 
     <script>
         function joinRoom(event) {
-            event.preventDefault(); // Prevent form submission
+            event.preventDefault();
             const roomName = document.getElementById("room").value.trim();
             if (roomName) {
-                // Redirect to /room/{room_name}
                 window.location.href = `/room/${roomName}`;
             } else {
                 alert("Please enter a valid room name.");
