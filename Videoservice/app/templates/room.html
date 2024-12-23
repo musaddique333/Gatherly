@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room: {{ room_name }}</title>
+    <style>
+        #videos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        video {
+            width: 300px;
+            height: auto;
+            border: 2px solid black;
+            border-radius: 5px;
+        }
+        #chatBox {
+            border: 1px solid black;
+            height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Room: {{ room_name }}</h1>
+    <div id="videos">
+        <video id="localVideo" autoplay playsinline></video>
+    </div>
+    <input type="text" id="chatInput" placeholder="Type a message and press Enter">
+    <div id="chatBox"></div>
+
+    <script>
+        const roomName = "{{ room_name }}";
+        const userId = Math.random().toString(36).substring(2, 8); // Generate a random user ID
+        const signalingServer = `ws://localhost:8000/ws/${roomName}/${userId}`;
+        const ws = new WebSocket(signalingServer);
+
+        let localStream;
+        let peerConnections = {}; // Map of peer connections for each user
+        const configuration = {
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+        };
+
+        ws.onopen = () => {
+            console.log("Connected to signaling server");
+            startCall();
+        };
+
+        async function startCall() {
+            try {
+                // Access user's media devices
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                const localVideo = document.getElementById("localVideo");
+                localVideo.srcObject = localStream;
+
+                ws.onmessage = async (message) => {
+                    const data = JSON.parse(message.data);
+                    const { type, from, offer, answer, candidate, message: chatMessage } = data;
+
+                    if (type === "offer" && !peerConnections[from]) {
+                        const pc = createPeerConnection(from);
+                        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        ws.send(JSON.stringify({ type: "answer", from: userId, to: from, answer }));
+                    } else if (type === "answer" && peerConnections[from]) {
+                        await peerConnections[from].setRemoteDescription(new RTCSessionDescription(answer));
+                    } else if (type === "ice-candidate" && peerConnections[from]) {
+                        await peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate));
+                    } else if (type === "chat-message") {
+                        const chatBox = document.getElementById("chatBox");
+                        chatBox.innerHTML += `<p>${from}: ${chatMessage}</p>`;
+                    } else if (type === "new-user" && from !== userId) {
+                        // Create a new connection to the newly joined user
+                        const pc = createPeerConnection(from);
+                        const offer = await pc.createOffer();
+                        await pc.setLocalDescription(offer);
+                        ws.send(JSON.stringify({ type: "offer", from: userId, to: from, offer }));
+                    }
+                };
+
+                // Notify others of your presence
+                ws.send(JSON.stringify({ type: "new-user", from: userId }));
+            } catch (error) {
+                console.error("Error accessing media devices:", error);
+            }
+        }
+
+        function createPeerConnection(remoteUserId) {
+            const pc = new RTCPeerConnection(configuration);
+            peerConnections[remoteUserId] = pc;
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    ws.send(JSON.stringify({
+                        type: "ice-candidate",
+                        from: userId,
+                        to: remoteUserId,
+                        candidate: event.candidate
+                    }));
+                }
+            };
+
+            pc.ontrack = (event) => {
+                addVideoStream(event.streams[0], `remote-${remoteUserId}`);
+            };
+
+            // Add local media tracks to the connection
+            localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+            return pc;
+        }
+
+        function addVideoStream(stream, id) {
+            if (!document.getElementById(id)) {
+                const videoElement = document.createElement("video");
+                videoElement.id = id;
+                videoElement.autoplay = true;
+                videoElement.playsinline = true;
+                videoElement.srcObject = stream;
+                document.getElementById("videos").appendChild(videoElement);
+            }
+        }
+
+        document.getElementById("chatInput").addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                const chatMessage = event.target.value.trim();
+                if (chatMessage) {
+                    ws.send(JSON.stringify({ type: "chat-message", from: userId, message: chatMessage }));
+                    event.target.value = ""; // Clear input
+                }
+            }
+        });
+    </script>
+</body>
+</html>

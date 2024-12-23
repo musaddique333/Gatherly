@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call Home</title>
+</head>
+<body>
+    <h1>Welcome to the Video Call App</h1>
+    <form id="roomForm" onsubmit="joinRoom(event)">
+        <label for="room">Enter Room Name:</label>
+        <input type="text" id="room" name="room_name" required>
+        <button type="submit">Join Room</button>
+    </form>
+
+    <script>
+        function joinRoom(event) {
+            event.preventDefault(); // Prevent form submission
+            const roomName = document.getElementById("room").value.trim();
+            if (roomName) {
+                // Redirect to /room/{room_name}
+                window.location.href = `/room/${roomName}`;
+            } else {
+                alert("Please enter a valid room name.");
+            }
+        }
+    </script>
+</body>
+</html>
