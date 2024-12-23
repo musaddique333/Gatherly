@@ -24,8 +24,7 @@ class ConnectionManager:
         if room not in self.room_messages:
             self.room_messages[room] = []
         self.rooms[room][user_id] = websocket
-        
-        # Send chat history to newly connected user
+
         if self.room_messages[room]:
             history_message = json.dumps({
                 "type": "chat-history",
@@ -37,7 +36,6 @@ class ConnectionManager:
         if room in self.rooms and user_id in self.rooms[room]:
             del self.rooms[room][user_id]
             if not self.rooms[room]:
-                # If room is empty, clear chat history
                 if room in self.room_messages:
                     del self.room_messages[room]
                 del self.rooms[room]

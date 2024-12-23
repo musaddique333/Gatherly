@@ -31,19 +31,40 @@
         <video id="localVideo" autoplay playsinline muted></video>
     </div>
     <input type="text" id="chatInput" placeholder="Type a message and press Enter">
+    <button id="call_end">End Call</button>
+    <button id="mute">Mute</button>
+    <button id="video_mute">Turn off camera</button>
     <div id="chatBox"></div>
 
     <script>
         const roomName = "{{ room_name }}";
         const userId = Math.random().toString(36).substring(2, 8);
         const signalingServer = `ws://localhost:8000/ws/${roomName}/${userId}`;
+        var muteBttn = document.getElementById("mute");
+        var muteVidBttn = document.getElementById("video_mute");
+        var callEndBttn = document.getElementById("call_end");
         let ws;
         let localStream;
         let peerConnections = {};
         const existingUsers = new Set();
+        var audioMuted = false;
+        var videoMuted = false;
+        var myVideo = document.getElementById("localVideo");
         const configuration = {
             iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
         };
+
+        muteBttn.addEventListener("click", (event)=>{
+        audioMuted = !audioMuted;
+        setAudioMuteState(audioMuted);        
+        });    
+        muteVidBttn.addEventListener("click", (event)=>{
+            videoMuted = !videoMuted;
+            setVideoMuteState(videoMuted);        
+        });    
+        callEndBttn.addEventListener("click", (event)=>{
+            window.location.replace("/");
+        });
 
         // Clean up function to handle page refresh/close
         window.onbeforeunload = () => {
@@ -56,6 +77,19 @@
                 localStream.getTracks().forEach(track => track.stop());
             }
         };
+
+        function setAudioMuteState(flag)
+        {
+            let local_stream = myVideo.srcObject;
+            local_stream.getAudioTracks().forEach((track)=>{track.enabled = !flag;});
+            muteBttn.innerText = flag ? "Unmute" : "Mute";
+        }
+        function setVideoMuteState(flag)
+        {
+            let local_stream = myVideo.srcObject;
+            local_stream.getVideoTracks().forEach((track)=>{track.enabled = !flag;});
+            muteVidBttn.innerText = flag ? "Turn on" : "Turn off";
+        }
 
         function connectWebSocket() {
             ws = new WebSocket(signalingServer);
