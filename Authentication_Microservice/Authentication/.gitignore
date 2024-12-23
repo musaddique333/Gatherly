@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Enviornment Files
+.env
+.env.production
+.env.development
+
+# bash script
+set_env.sh
+
+# vscode
+.vscode
+test.py
