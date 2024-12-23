@@ -62,9 +62,7 @@
             videoMuted = !videoMuted;
             setVideoMuteState(videoMuted);        
         });    
-        callEndBttn.addEventListener("click", (event)=>{
-            window.location.replace("/");
-        });
+
 
         // Clean up function to handle page refresh/close
         window.onbeforeunload = () => {
@@ -115,6 +113,23 @@
             chatBox.innerHTML += `<p>${timeStr}${from}: ${message}</p>`;
             chatBox.scrollTop = chatBox.scrollHeight;
         }
+
+        callEndBttn.addEventListener("click", (event) => {
+        ws.send(JSON.stringify({ type: "user-disconnected", from: userId }));
+        Object.keys(peerConnections).forEach(remoteUserId => {
+            if (peerConnections[remoteUserId]) {
+                peerConnections[remoteUserId].close();
+                delete peerConnections[remoteUserId];
+            }
+        });
+        existingUsers.clear();
+        if (ws) ws.close();
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        window.location.replace("/");
+    });
+
 
         async function startCall() {
             try {
@@ -192,6 +207,8 @@
                 console.error("Error in startCall:", error);
             }
         }
+
+
 
         async function createPeerConnection(remoteUserId) {
             const pc = new RTCPeerConnection(configuration);
