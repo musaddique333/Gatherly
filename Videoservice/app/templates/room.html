@@ -33,7 +33,8 @@
     <input type="text" id="chatInput" placeholder="Type a message and press Enter">
     <button id="call_end">End Call</button>
     <button id="mute">Mute</button>
-    <button id="video_mute">Turn off camera</button>
+    <button id="video_mute">Turn off</button>
+    <button id="share_screen">Share Screen</button>
     <div id="chatBox"></div>
 
     <script>
@@ -43,16 +44,63 @@
         var muteBttn = document.getElementById("mute");
         var muteVidBttn = document.getElementById("video_mute");
         var callEndBttn = document.getElementById("call_end");
+        var shareScreenBttn = document.getElementById("share_screen");
         let ws;
         let localStream;
         let peerConnections = {};
         const existingUsers = new Set();
         var audioMuted = false;
         var videoMuted = false;
+        var shareScreen = false;
         var myVideo = document.getElementById("localVideo");
         const configuration = {
             iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
         };
+
+        shareScreenBttn.addEventListener("click", async () => {
+            if (shareScreen) {
+                stopScreenSharing();
+            } else {
+                await startScreenSharing();
+            }
+        });
+
+        async function startScreenSharing() {
+            try {
+                screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const screenTrack = screenStream.getVideoTracks()[0];
+                Object.values(peerConnections).forEach(pc => {
+                    const sender = pc.getSenders().find(s => s.track.kind === "video");
+                    if (sender) {
+                        sender.replaceTrack(screenTrack);
+                    }
+                });
+                myVideo.srcObject = screenStream;
+                screenTrack.onended = stopScreenSharing;
+                shareScreen = true;
+                shareScreenBttn.innerText = "Stop Sharing";
+            } catch (error) {
+                console.error("Error sharing screen:", error);
+            }
+        }
+
+        function stopScreenSharing() {
+            if (screenStream) {
+                screenStream.getTracks().forEach(track => track.stop());
+            }
+            const videoTrack = localStream.getVideoTracks()[0];
+            Object.values(peerConnections).forEach(pc => {
+                const sender = pc.getSenders().find(s => s.track.kind === "video");
+                if (sender) {
+                    sender.replaceTrack(videoTrack);
+                }
+            });
+
+            myVideo.srcObject = localStream;
+            shareScreen = false;
+            shareScreenBttn.innerText = "Share Screen";
+        }
+
 
         muteBttn.addEventListener("click", (event)=>{
         audioMuted = !audioMuted;
