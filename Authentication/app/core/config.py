@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
     EMAIL_FROM: str = os.getenv("EMAIL_FROM")
 
+    # Grpc setup
+    GRPC_PORT: int = os.getenv("GRPC_PORT")
+
     @property
     def SUPABASE_DATABASE_URL(self) -> str:
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
