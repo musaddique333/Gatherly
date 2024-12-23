@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:14.15-alpine3.21
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dodgygeezers
+
+  adminer:
+    image: adminer:adminer:4.8.1
+    ports:
+      - "8080:8080"
+    networks:
+      - dodgygeezers
+
+  registration:
+      # restart: "no"
+    ports:
+      - 8000:8000
+    build:
+      context: .
+      dockerfile: Authentication_Microservice/Authentication/Dockerfile
+    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
+    env_file:
+      - .env.production
+    environment:
+      - DB_HOST=postgres
+    depends_on:
+      - postgres
+    networks:
+      - dodgygeezers
+
+  event:
+      # restart: "no"
+    ports:
+      - 8000:8001
+    build:
+      context: .
+      dockerfile: Event_Microservice/Event/Dockerfile
+    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
+    env_file:
+      - .env.production
+    environment:
+      - DB_HOST=postgres
+    depends_on:
+      - postgres
+    networks:
+      - dodgygeezers
+
+volumes:
+  postgres_data:
+
+networks:
+  dodgygeezers:
+    driver: bridge

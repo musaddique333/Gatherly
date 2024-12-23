@@ -10,6 +10,10 @@ class IndividualSignUp(BaseModel):
     phone_number: str = Field(..., pattern=r'^\+?[1-9]\d{1,14}$')  # Basic E.164 format for phone numbers
     password: str = Field(..., min_length=8, max_length=32)
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 class IndividualUser(Base):
     __tablename__ = "individual_users"
 
