@@ -7,6 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "debugpy>=1.8.11",
     "fastapi[standard]>=0.115.6",
+    "grpcio-tools>=1.68.1",
+    "grpcio>=1.68.1",
     "passlib>=1.7.4",
     "psycopg2-binary>=2.9.10",
     "pydantic-settings>=2.7.0",
