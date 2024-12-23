@@ -95,25 +95,6 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     # For simplicity, let’s assume we just return a success message
     return {"message": f"Email {email} verified successfully!"}
 
-# Route to validate user by email
-@router.get("/validate-user/{email}")
-def validate_user(email: str, db: Session = Depends(get_db)):
-    user = get_user_by_email(email, db)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-    
-    # Check if email is verified
-    if not user.is_email_verified:
-        raise HTTPException(status_code=403, detail="Email not verified. Please verify your email to proceed.")
-    
-    # Check if phone number is verified
-    if not user.is_phone_verified:
-        raise HTTPException(status_code=403, detail="Phone number not verified. Please verify your phone number to proceed.")
-    
-    return {"message": f"User {email} is valid and verified."}
-
-
 # Login route for individual users
 @router.post("/login")
 def login_individual(user: UserLogin, db: Session = Depends(get_db)):

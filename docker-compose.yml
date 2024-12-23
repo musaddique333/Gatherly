@@ -1,31 +1,35 @@
 services:
   postgres:
+    container_name: postgres_db
     image: postgres:14.15-alpine3.21
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - dodgygeezers
 
   adminer:
-    image: adminer:adminer:4.8.1
+    container_name: adminer_ui
+    image: adminer:4.8.1
     ports:
-      - "8080:8080"
+      - 8080:8080
     networks:
       - dodgygeezers
 
   registration:
+    container_name: registration_service
       # restart: "no"
     ports:
       - 8000:8000
+      - 50051:50051
     build:
-      context: .
-      dockerfile: Authentication_Microservice/Authentication/Dockerfile
+      context: ./Authentication_Microservice/Authentication
+      dockerfile: Dockerfile
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     env_file:
       - .env.production
@@ -37,12 +41,13 @@ services:
       - dodgygeezers
 
   event:
+    container_name: event_service
       # restart: "no"
     ports:
-      - 8000:8001
+      - 8001:8001
     build:
-      context: .
-      dockerfile: Event_Microservice/Event/Dockerfile
+      context: ./Event_Microservice/Event
+      dockerfile: Dockerfile
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     env_file:
       - .env.production
