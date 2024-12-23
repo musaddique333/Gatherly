@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, APIRouter, Request
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.models import IndividualSignUp
+from app.models import IndividualSignUp, UserLogin
 from app.crud import create_user, get_user_by_email
 from app.utils import *
 from app.core.security import hash_password, verify_password, create_access_token
@@ -116,20 +116,24 @@ def validate_user(email: str, db: Session = Depends(get_db)):
 
 # Login route for individual users
 @router.post("/login")
-def login_individual(email: str, password: str, db: Session = Depends(get_db)):
-    user = get_user_by_email(email, db)
+def login_individual(user: UserLogin, db: Session = Depends(get_db)):
+    # Get user by email
+    user_in_db = get_user_by_email(user.email, db)
 
-    if not user.is_email_verified:
-        raise HTTPException(status_code=403, detail="Email not verified. Please verify your email to proceed.")
-    
-    if not user.is_phone_verified:
-        raise HTTPException(status_code=403, detail="Phone no not verified. Please verify your phone number to proceed.")
-    
-    if not user or not verify_password(password, user.hashed_password):
+    # Check if the user exists
+    if not user_in_db or not verify_password(user.password, user_in_db.hashed_password):
         raise HTTPException(status_code=400, detail="Invalid credentials")
     
+    # Check if email is verified
+    if not user_in_db.is_email_verified:
+        raise HTTPException(status_code=403, detail="Email not verified.")
+    
+    # Check if phone is verified
+    if not user_in_db.is_phone_verified:
+        raise HTTPException(status_code=403, detail="Phone number not verified.")
+    
     access_token_expires = timedelta(minutes=30)
-    access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": user_in_db.email}, expires_delta=access_token_expires)
     
     return {
         "access_token": access_token,

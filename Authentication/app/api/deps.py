@@ -14,27 +14,30 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    # Decode the JWT token
-    payload = verify_access_token(token)
-    if not payload:
-        raise credentials_exception
+    try:
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+        # Decode the JWT token
+        payload = verify_access_token(token)
+        if not payload:
+            raise HTTPException(status_code=408, detail="Invalid token")
 
-    email = payload.get("sub")
-    if email is None:
-        raise credentials_exception
-
-    # Retrieve user from the database
-    user = get_user_by_email(email=email, db=db)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return user
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Retrieve user from the database
+        user = get_user_by_email(email=email, db=db)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return user
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token or expired token")
 
 # Dependencies for specific user types
 def get_current_individual_user(

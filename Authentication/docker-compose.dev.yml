@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - dodgygeezers_auth_test
+      - dodgygeezers_test
 
   registration:
       # restart: "no"
@@ -49,18 +49,19 @@ services:
     depends_on:
       - postgres
     networks:
-      - dodgygeezers_auth_test
+      - dodgygeezers_test
   
   adminer:
     image: adminer:latest
     ports:
       - "8080:8080"
     networks:
-      - dodgygeezers_auth_test
+      - dodgygeezers_test
 
 volumes:
   postgres_data:
 
 networks:
-  dodgygeezers_auth_test:
-    driver: bridge
+  dodgygeezers_test:
+    # driver: bridge
+    external: true
