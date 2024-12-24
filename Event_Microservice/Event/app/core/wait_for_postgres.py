@@ -1,14 +1,15 @@
 import psycopg2
 import time
 from psycopg2 import OperationalError
+from app.core.config import settings
 import os
 
 def wait_for_postgres():
-    db_host =  os.getenv('POSTGRES_HOST')
-    db_port = os.getenv('POSTGRES_PORT')
-    db_user = os.getenv('POSTGRES_USER')
-    db_password = os.getenv('POSTGRES_PASSWORD')
-    db_name = os.getenv('POSTGRES_DB')
+    db_host =  settings.DB_HOST
+    db_port = settings.DB_PORT
+    db_user = settings.DB_USER
+    db_password = settings.DB_PASSWORD
+    db_name = settings.DB_NAME
 
     while True:
         try:
