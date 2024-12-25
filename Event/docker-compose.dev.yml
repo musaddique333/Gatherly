@@ -1,8 +1,7 @@
 services:
-
   redis:
-    image: "redis:alpine"
-    container_name: redis
+    image: redis:8.0-M02-alpine
+    container_name: redis-test
     ports:
       - 6379:6379
     networks:
@@ -16,7 +15,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: event-service
+    container_name: event-microservice-test
     volumes:
     - ./app:/app/app
     - ./pyproject.toml:/app/pyproject.toml
@@ -52,7 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: celery-worker
+    container_name: celery-worker-test
     command:
       - celery
       - -A
@@ -74,7 +73,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: celery-beat
+    container_name: celery-beat-test
     command:
       - celery
       - -A
@@ -91,6 +90,20 @@ services:
     depends_on:
       - redis
       - event-service
+
+  flower:
+    image: mher/flower:latest
+    container_name: flower-test
+    ports:
+      - 5555:5555
+    environment:
+      - FLOWER_BASIC_AUTH=username:password
+      - FLOWER_BROKER=redis://redis:6379
+    networks:
+      - dodgygeezers_test
+    depends_on:
+      - redis
+      - celery-worker
 
 networks:
   dodgygeezers_test:

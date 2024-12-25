@@ -8,7 +8,9 @@ from sqlalchemy import (
     ForeignKey,
     UniqueConstraint
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from uuid import UUID as N_UUID
+from uuid import uuid4
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
@@ -24,25 +26,23 @@ class Event(Base):
     Represents an event entity in the database.
 
     Attributes:
-        id (int): Primary key of the event.
+        id (UUID): Primary key of the event, auto-generated in UUID format.
         title (str): Title of the event.
         date (datetime): Date and time of the event.
         description (str, optional): Description of the event.
         location (str, optional): Physical or virtual location of the event.
-        num_members (int): Number of members participating in the event.
         tags (List[str], optional): List of tags associated with the event.
         is_online (bool): Indicates if the event is online.
         organizer_email (str): Email of the event organizer.
     """
     __tablename__ = "events"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID, primary_key=True, index=True, default=uuid4)
     title = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)
     description = Column(Text, nullable=True)
     location = Column(String, nullable=True)
-    num_members = Column(Integer, default=0)
-    tags = Column(ARRAY(String), nullable=True)  # List of tags
+    tags = Column(ARRAY(String), nullable=True)
     is_online = Column(Boolean, default=True)
     organizer_email = Column(String, index=True, nullable=False)
 
@@ -63,7 +63,7 @@ class EventMember(Base):
     __tablename__ = "event_members"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_id = Column(Integer, ForeignKey("events.id"), nullable=False, index=True)
+    event_id = Column(UUID(as_uuid=True), ForeignKey("events.id"), nullable=False, index=True)
     user_email = Column(String, nullable=False, index=True)
 
     # Relationships
@@ -86,7 +86,7 @@ class Reminder(Base):
     __tablename__ = "reminders"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
+    event_id = Column(UUID(as_uuid=True), ForeignKey("events.id"), nullable=False, index=True)
     user_email = Column(String, nullable=False)
     reminder_time = Column(DateTime, nullable=False)
 
@@ -106,7 +106,6 @@ class EventBase(BaseModel):
         date (datetime): Date and time of the event.
         description (Optional[str]): Description of the event.
         location (Optional[str]): Physical or virtual location of the event.
-        num_members (Optional[int]): Number of members participating.
         tags (Optional[List[str]]): List of tags for the event.
         is_online (bool): Indicates if the event is online.
     """
@@ -114,7 +113,6 @@ class EventBase(BaseModel):
     date: datetime
     description: Optional[str]
     location: Optional[str]
-    num_members: Optional[int] = 0
     tags: Optional[List[str]] = []
     is_online: bool
 
@@ -141,10 +139,11 @@ class EventOut(EventBase):
     Attributes:
         id (int): Unique identifier of the event.
     """
-    id: int
+    id: N_UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        arbitrary_types_allowed = True
 
 
 class EventMemberBase(BaseModel):
