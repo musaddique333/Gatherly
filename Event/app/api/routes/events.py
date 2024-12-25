@@ -7,6 +7,8 @@ from app.crud import create_event, get_events, get_event, update_event, delete_e
 from app.core.db import get_db
 from app.utils import validate_user
 
+from app.tasks import send_event_created_email
+
 router = APIRouter()
 
 # Create a new event
@@ -17,7 +19,12 @@ def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
         validate_user(event.organizer_email)
     except HTTPException as e:
         raise e 
-    return create_event(db=db, event=event)
+    
+    created_event = create_event(db=db, event=event)
+
+    send_event_created_email.apply_async((created_event.id, event.organizer_email))
+    
+    return created_event
 
 # Get all events that the user is a member of
 @router.get("/", response_model=List[EventOut])

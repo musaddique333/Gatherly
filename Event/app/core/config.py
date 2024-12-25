@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
     EMAIL_FROM: str = os.getenv("EMAIL_FROM")
 
+    # Redis configuration
+    REDIS_HOST: str = os.getenv("REDIS_HOST")
+    REDIS_PORT: int = os.getenv("REDIS_PORT")
+
+    # grpc for auth microservice
+    AUTH_SERVICE_HOST: str = os.getenv("AUTH_SERVICE_HOST")
+    AUTH_SERVICE_PORT: int = os.getenv("AUTH_SERVICE_PORT")
+
     @property
     def SUPABASE_DATABASE_URL(self) -> str:
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

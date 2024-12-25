@@ -7,6 +7,8 @@ from app.models import EventMemberCreate, EventMemberOut
 from app.crud import add_event_member, remove_event_member, get_event_members
 from app.utils import validate_user
 
+from app.tasks import send_member_added_email
+
 router = APIRouter()
 
 # Add a member to an event (only if the user is the organizer)
@@ -18,6 +20,9 @@ def add_member_to_event(member: EventMemberCreate, organizer_email: str, db: Ses
         raise e
     
     db_member = add_event_member(db=db, event_id=member.event_id, user_email=member.user_email, organizer_email=organizer_email)
+
+    send_member_added_email.apply_async((member.event_id, member.user_email))
+    
     return db_member
 
 # Remove a member from an event (only if the user is the organizer)

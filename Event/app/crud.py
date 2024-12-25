@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models import EventMember, Event, EventCreate, EventUpdate
+from app.models import EventMember, Event, EventCreate, EventUpdate, Reminder, ReminderCreate
 
 # Create a new event
 def create_event(db: Session, event: EventCreate):
@@ -186,3 +186,14 @@ def get_event_members(db: Session, event_id: int, user_email: str):
 
     # Retrieve and return the members
     return db.query(EventMember).filter(EventMember.event_id == event_id).all()
+
+def create_reminder_entry(db: Session, reminder: ReminderCreate):
+    new_reminder = Reminder(
+        event_id=reminder.event_id,
+        user_email=reminder.user_email,
+        reminder_time=reminder.reminder_time
+    )
+    db.add(new_reminder)
+    db.commit()
+    db.refresh(new_reminder)
+    return new_reminder
