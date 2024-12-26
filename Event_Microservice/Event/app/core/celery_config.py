@@ -28,6 +28,6 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     'send-reminder-every-5-minutes': {
         'task': 'app.tasks.send_reminder',  # The task to execute
-        'schedule': 60.0,  # Time interval in seconds (5 minutes)
+        'schedule': 300.0,  # Time interval in seconds (5 minutes)
     },
 }
