@@ -69,7 +69,7 @@ def get_event(db: Session, event_id: UUID, user_email: str):
 
     Args:
         db (Session): The database session.
-        event_id (int): The event's ID.
+        event_id (UUID): The event's ID.
         user_email (str): The user's email to verify membership.
 
     Returns:
@@ -102,7 +102,7 @@ def update_event(db: Session, event_id: UUID, event: EventUpdate, user_email: st
 
     Args:
         db (Session): The database session.
-        event_id (int): The event's ID to update.
+        event_id (UUID): The event's ID to update.
         event (EventUpdate): The new event data.
         user_email (str): The user's email to verify if they are the organizer.
 
@@ -140,7 +140,7 @@ def delete_event(db: Session, event_id: UUID, user_email: str):
 
     Args:
         db (Session): The database session.
-        event_id (int): The event's ID to delete.
+        event_id (UUID): The event's ID to delete.
         user_email (str): The user's email to verify if they are the organizer.
 
     Returns:
@@ -181,7 +181,7 @@ def add_event_member(db: Session, event_id: UUID, user_email: str, organizer_ema
 
     Args:
         db (Session): The database session.
-        event_id (int): The event's ID.
+        event_id (UUID): The event's ID.
         user_email (str): The email of the user to add.
         organizer_email (str): The email of the organizer.
 
@@ -232,7 +232,7 @@ def remove_event_member(db: Session, event_id: UUID, user_email: str, organizer_
 
     Args:
         db (Session): The database session.
-        event_id (int): The event's ID.
+        event_id (UUID): The event's ID.
         user_email (str): The email of the user to remove.
         organizer_email (str): The email of the organizer.
 
@@ -287,7 +287,7 @@ def get_event_members(db: Session, event_id: UUID, user_email: str):
 
     Args:
         db (Session): The database session.
-        event_id (int): The event's ID.
+        event_id (UUID): The event's ID.
         user_email (str): The user's email to verify membership.
 
     Returns:

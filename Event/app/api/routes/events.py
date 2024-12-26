@@ -48,7 +48,7 @@ def read_events(user_email: str, skip: int = 0, limit: int = 10, db: Session = D
 
 # Get a single event by its ID (only if the user is a member)
 @router.get("/{event_id}", response_model=EventOut)
-def read_event(event_id: UUID, user_email: str, db: Session = Depends(get_db)):
+def read_event(event_id: str, user_email: str, db: Session = Depends(get_db)):
     """
     Retrieves a single event by its ID if the user is a member of the event.
     
@@ -60,7 +60,7 @@ def read_event(event_id: UUID, user_email: str, db: Session = Depends(get_db)):
 
 # Update an existing event by its ID (only if the user is the organizer)
 @router.put("/{event_id}", response_model=EventOut)
-def update_existing_event(event_id: UUID, event: EventUpdate, user_email: str, db: Session = Depends(get_db)):
+def update_existing_event(event_id: str, event: EventUpdate, user_email: str, db: Session = Depends(get_db)):
     """
     Updates an existing event by its ID, only if the user is the event organizer.
     
@@ -73,7 +73,7 @@ def update_existing_event(event_id: UUID, event: EventUpdate, user_email: str, d
 
 # Delete an event by its ID (only by organizer)
 @router.delete("/{event_id}", response_model=EventOut)
-def delete_existing_event(event_id: UUID, user_email: str, db: Session = Depends(get_db)):
+def delete_existing_event(event_id: str, user_email: str, db: Session = Depends(get_db)):
     """
     Deletes an event by its ID, only if the user is the event organizer.
     

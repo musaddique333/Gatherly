@@ -44,7 +44,7 @@ def validate_user(email: str):
         logger.error(f"Unexpected error during user validation: {str(e)}")
         raise HTTPException(status_code=500, detail="Unexpected error during user validation")
 
-def send_email(subject: str, recipient: str, plain_body: str, html_body: str):
+def send_email(subject: str, recipient: str, body: str):
     """
     Sends an email using SMTP.
 
@@ -61,8 +61,7 @@ def send_email(subject: str, recipient: str, plain_body: str, html_body: str):
     msg['To'] = f"Subscriber <{recipient}>"
     msg['Subject'] = subject
 
-    msg.attach(MIMEText(html_body, "html"))
-    msg.attach(MIMEText(plain_body, "plain"))
+    msg.attach(MIMEText(body, "html"))
 
     try:
         # Set up the SMTP server and send email

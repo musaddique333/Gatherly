@@ -137,7 +137,7 @@ class EventOut(EventBase):
     Schema for retrieving event details.
 
     Attributes:
-        id (int): Unique identifier of the event.
+        id (UUID): Unique identifier of the event.
     """
     id: N_UUID
 
@@ -151,10 +151,10 @@ class EventMemberBase(BaseModel):
     Base schema for event member operations.
 
     Attributes:
-        event_id (int): ID of the event.
+        event_id (UUID): ID of the event.
         user_email (EmailStr): Email of the member.
     """
-    event_id: int
+    event_id: N_UUID
     user_email: EmailStr
 
 
@@ -181,11 +181,11 @@ class ReminderCreate(BaseModel):
     Schema for creating a reminder.
 
     Attributes:
-        event_id (int): ID of the associated event.
+        event_id (UUID): ID of the associated event.
         user_email (str): Email of the user to receive the reminder.
         reminder_time (datetime): Time of the reminder.
     """
-    event_id: int
+    event_id: N_UUID
     user_email: str
     reminder_time: datetime
 

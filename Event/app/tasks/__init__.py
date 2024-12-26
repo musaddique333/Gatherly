@@ -6,6 +6,7 @@ from app.core.db import SessionLocal
 from app.crud import delete_reminder_entry
 
 import logging
+from uuid import UUID
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -13,12 +14,12 @@ logger.setLevel(logging.INFO)
 
 # Task to send event creation email to the organizer
 @celery_app.task
-def send_event_created_email(event_id: int, organizer_email: str):
+def send_event_created_email(event_id: UUID, organizer_email: str):
     """
     Send an email to the event organizer confirming the event creation.
 
     Args:
-        event_id (int): The ID of the created event.
+        event_id (UUID): The ID of the created event.
         organizer_email (str): The email address of the event organizer.
     """
     try:
@@ -26,52 +27,46 @@ def send_event_created_email(event_id: int, organizer_email: str):
             event = db.query(Event).get(event_id)
             if event:
                 # Prepare HTML and Plaintext bodies
-                html_body=f"""
+                body = f"""
                 <html>
-                <body>
-                    <h2 style="color: #333;">Event Creation Successful!</h2>
-                    <p>Hello,</p>
-                    <p>Congratulations! Your event titled <strong>{event.title}</strong> has been successfully created and is now live. Below are the details for your reference:</p>
-                    <ul>
-                        <li><strong>Event Title:</strong> {event.title}</li>
-                        <li><strong>Date & Time:</strong> {event.date.strftime('%Y-%m-%d at %H:%M:%S')}</li>
-                        <li><strong>Description:</strong> {event.description or 'No description provided.'}</li>
-                        <li><strong>Location:</strong> {event.location or 'Not specified'}</li>
-                        <li><strong style="color: red;">Room ID:{event.id}</strong></li>
-                    </ul>
-                    <p>Thank you for using our platform, and we wish you all the best in organizing your event!</p>
-                    <br>
-                    <p><strong>Best regards,</strong></p>
-                    <p>The Event Team</p>
+                <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+                    <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                        <h2 style="color: #333;">Event Creation Successful!</h2>
+                        <p style="color: #555; line-height: 1.6;">Hello,</p>
+                        <p style="color: #555; line-height: 1.6;">Congratulations! Your event titled <strong>{event.title}</strong> has been successfully created and is now live. Below are the details for your reference:</p>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Event Title:</strong> {event.title}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Date & Time:</strong> {event.date.strftime('%Y-%m-%d at %H:%M:%S')}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Description:</strong> {event.description or 'No description provided.'}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Location:</strong> {event.location or 'Not specified'}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Room ID:</strong> <strong style="color: blue; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{event.id}</strong>
+                            </li>
+                        </ul>
+                        <p style="color: #555; line-height: 1.6;">Thank you for using our platform, and we wish you all the best in organizing your event!</p>
+                        <p style="font-weight: bold;">Best regards,</p>
+                        <p>The Event Team</p>
+                    </div>
+                    <div style="margin-top: 20px; font-size: 0.9em; color: #777;">
+                        <p>This email was sent to you because you created an event on our platform. If you have any questions, feel free to contact us.</p>
+                    </div>
                 </body>
                 </html>
-                """
-
-                plain_body=f"""
-                Event Creation Successful!
-
-                Hello,
-
-                Congratulations! Your event titled "{event.title}" has been successfully created and is now live. Below are the details for your reference:
-
-                Event Title: {event.title}
-                Date & Time: {event.date.strftime('%Y-%m-%d at %H:%M:%S')}
-                Description: {event.description or 'No description provided.'}
-                Location: {event.location or 'Not specified'}
-                Room ID: {event.id}
-
-                Thank you for using our platform, and we wish you all the best in organizing your event!
-
-                Best regards,
-                The Event Team
                 """
 
                 # Send email with both HTML and plaintext content
                 send_email(
                     subject=f"Your Event '{event.title}' Has Been Successfully Created!",
                     recipient=organizer_email,
-                    plain_body=plain_body,
-                    html_body=html_body 
+                    body=body 
                 )
 
                 logger.info(f"Event creation email sent to {organizer_email} for event {event_id}.")
@@ -84,12 +79,12 @@ def send_event_created_email(event_id: int, organizer_email: str):
 
 # Task to send email to the new member when added to an event
 @celery_app.task
-def send_member_added_email(event_id: int, member_email: str):
+def send_member_added_email(event_id: UUID, member_email: str):
     """
     Send an email to a new member when added to an event.
 
     Args:
-        event_id (int): The ID of the event the member was added to.
+        event_id (UUID): The ID of the event the member was added to.
         member_email (str): The email address of the new member.
     """
     try:
@@ -97,52 +92,42 @@ def send_member_added_email(event_id: int, member_email: str):
             event = db.query(Event).get(event_id)
             if event:
                 # Prepare HTML and Plaintext bodies
-                html_body = f"""
+                body = f"""
                 <html>
-                <body>
-                    <h2 style="color: #333;">You’ve Been Added to an Event!</h2>
-                    <p>Hi {member_email},</p>
-                    <p>We are excited to inform you that you have been successfully added to the event <strong>"{event.title}"</strong>. Here are the details:</p>
-                    <ul>
-                        <li><strong>Event Title:</strong> {event.title}</li>
-                        <li><strong>Date & Time:</strong> {event.date.strftime('%Y-%m-%d at %H:%M:%S')}</li>
-                        <li><strong>Description:</strong> {event.description or 'No description provided.'}</li>
-                        <li><strong>Location:</strong> {event.location or 'Not specified'}</li>
-                        <li><strong style="color: red;">Room ID: {event.id}</strong></li>
-                    </ul>
-                    <p>Please mark your calendar and feel free to reach out if you have any questions.</p>
-                    <br>
-                    <p><strong>Best regards,</strong></p>
-                    <p>The Event Team</p>
+                <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+                    <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                        <h2 style="color: #333;">You’ve Been Added to an Event!</h2>
+                        <p style="color: #555; line-height: 1.6;">Hi {member_email},</p>
+                        <p style="color: #555; line-height: 1.6;">We are excited to inform you that you have been successfully added to the event <strong>"{event.title}"</strong>. Here are the details:</p>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Event Title:</strong> {event.title}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Date & Time:</strong> {event.date.strftime('%Y-%m-%d at %H:%M:%S')}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Description:</strong> {event.description or 'No description provided.'}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Location:</strong> {event.location or 'Not specified'}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Room ID:</strong> <strong style="color: blue; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{event.id}</strong>
+                            </li>
+                        </ul>
+                        <p style="color: #555; line-height: 1.6;">Please mark your calendar and feel free to reach out if you have any questions.</p>
+                        <p style="font-weight: bold; color: #555;">Best regards,</p>
+                        <p style="color: #555;">The Event Team</p>
+                    </div>
                 </body>
                 </html>
                 """
-
-                plaintext_body = f"""
-                You’ve Been Added to an Event!
-
-                Hi {member_email},
-
-                We are excited to inform you that you have been successfully added to the event "{event.title}". Here are the details:
-
-                Event Title: {event.title}
-                Date & Time: {event.date.strftime('%Y-%m-%d at %H:%M:%S')}
-                Description: {event.description or 'No description provided.'}
-                Location: {event.location or 'Not specified'}
-                Room ID: {event.id}
-
-                Please mark your calendar and feel free to reach out if you have any questions.
-
-                Best regards,
-                The Event Team
-                """
-
                 # Send email with both HTML and plaintext content
                 send_email(
                     subject=f"You’ve Been Added to an Event '{event.title}'!",
                     recipient=member_email,
-                    plain_body=plaintext_body,
-                    html_body=html_body 
+                    body=body 
                 )
 
                 logger.info(f"Member added email sent to {member_email} for event {event_id}.")
@@ -155,14 +140,14 @@ def send_member_added_email(event_id: int, member_email: str):
 
 # Task to send event reminder emails to members
 @celery_app.task
-def send_event_reminder_email(reminder_time: str, member_email: str, event_id: int):
+def send_event_reminder_email(reminder_time: str, member_email: str, event_id: UUID):
     """
     Send a reminder email to a member for an event.
 
     Args:
         reminder_time (str): The time of the reminder in ISO format.
         member_email (str): The email address of the member to send the reminder.
-        event_id (int): The ID of the event for the reminder.
+        event_id (UUID): The ID of the event for the reminder.
     """
     try:
         reminder_time = datetime.fromisoformat(reminder_time)
@@ -170,50 +155,39 @@ def send_event_reminder_email(reminder_time: str, member_email: str, event_id: i
             event = db.query(Event).get(event_id)
             if event:
                 # Prepare HTML and Plaintext bodies
-                html_body = f"""
+                body = f"""
                 <html>
-                <body>
-                    <h2 style="color: #333;">Reminder: Upcoming Event</h2>
-                    <p>Dear {member_email},</p>
-                    <p>This is a friendly reminder that the event <strong>"{event.title}"</strong> is happening soon. Here are the details:</p>
-                    <ul>
-                        <li><strong>Event Title:</strong> {event.title}</li>
-                        <li><strong>Date & Time:</strong> {reminder_time.strftime('%Y-%m-%d at %H:%M:%S')}</li>
-                        <li><strong>Location:</strong> {event.location or 'Not specified'}</li>
-                        <li><strong style="color: red;">Room ID: {event.id}</strong></li>
-                    </ul>
-                    <p>Don't forget to join us! We look forward to seeing you at the event.</p>
-                    <br>
-                    <p><strong>Best regards,</strong></p>
-                    <p>The Event Team</p>
+                <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+                    <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                        <h2 style="color: #333;">Reminder: Upcoming Event</h2>
+                        <p style="color: #555; line-height: 1.6;">Dear {member_email},</p>
+                        <p style="color: #555; line-height: 1.6;">This is a friendly reminder that the event <strong>"{event.title}"</strong> is happening soon. Here are the details:</p>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Event Title:</strong> {event.title}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Date & Time:</strong> {reminder_time.strftime('%Y-%m-%d at %H:%M:%S')}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Location:</strong> {event.location or 'Not specified'}
+                            </li>
+                            <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Room ID:</strong> <strong style="color: blue; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{event.id}</strong>
+                            </li>
+                        </ul>
+                        <p style="color: #555; line-height: 1.6;">Don't forget to join us! We look forward to seeing you at the event.</p>
+                        <p style="font-weight: bold; color: #555;">Best regards,</p>
+                        <p style="color: #555;">The Event Team</p>
+                    </div>
                 </body>
                 </html>
                 """
-
-                plaintext_body = f"""
-                Reminder: Upcoming Event
-
-                Dear {member_email},
-
-                This is a friendly reminder that the event "{event.title}" is happening soon. Here are the details:
-
-                Event Title: {event.title}
-                Date & Time: {reminder_time.strftime('%Y-%m-%d at %H:%M:%S')}
-                Location: {event.location or 'Not specified'}
-                Room ID: {event.id}
-
-                Don't forget to join us! We look forward to seeing you at the event.
-
-                Best regards,
-                The Event Team
-                """
-
                 # Send email with both HTML and plaintext content
                 send_email(
                     subject=f"Reminder: Upcoming Event - {event.title}",
                     recipient=member_email,
-                    plain_body=plaintext_body,
-                    html_body=html_body  # Adding HTML formatted content
+                    body=body
                 )
 
                 logger.info(f"Event reminder email sent to {member_email} for event {event_id} scheduled at {reminder_time}.")
@@ -250,50 +224,40 @@ def send_reminder():
                     email = reminder.user_email.strip()
                     if email:
                         # Prepare HTML and Plaintext bodies
-                        html_body = f"""
+                        body = f"""
                         <html>
-                        <body>
-                            <h2 style="color: #333;">Reminder: Your Event '{reminder.event.title}' is Happening Soon!</h2>
-                            <p>Dear {email},</p>
-                            <p>This is a reminder for the upcoming event:</p>
-                            <ul>
-                                <li><strong>Event Title:</strong> {reminder.event.title}</li>
-                                <li><strong>Date & Time:</strong> {reminder.reminder_time.strftime('%Y-%m-%d at %H:%M:%S')}</li>
-                                <li><strong>Location:</strong> {reminder.event.location or 'Not specified'}</li>
-                                <li><strong style="color: red;">Room ID: {reminder.event.id}</strong></li>
-                            </ul>
-                            <p>We look forward to your participation! Please make sure to mark your calendar.</p>
-                            <br>
-                            <p><strong>Best regards,</strong></p>
-                            <p>The Event Team</p>
+                        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+                            <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                                <h2 style="color: #333;">Reminder: Your Event '{reminder.event.title}' is Happening Soon!</h2>
+                                <p style="color: #555; line-height: 1.6;">Dear {email},</p>
+                                <p style="color: #555; line-height: 1.6;">This is a reminder for the upcoming event:</p>
+                                <ul style="list-style-type: none; padding: 0;">
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                        <strong>Event Title:</strong> {reminder.event.title}
+                                    </li>
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                        <strong>Date & Time:</strong> {reminder.reminder_time.strftime('%Y-%m-%d at %H:%M:%S')}
+                                    </li>
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                        <strong>Location:</strong> {reminder.event.location or 'Not specified'}
+                                    </li>
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                <strong>Room ID:</strong> <strong style="color: blue; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{reminder.event.id}</strong>
+                                    </li>
+                                </ul>
+                                <p style="color: #555; line-height: 1.6;">We look forward to your participation! Please make sure to mark your calendar.</p>
+                                <p style="font-weight: bold; color: #555;">Best regards,</p>
+                                <p style="color: #555;">The Event Team</p>
+                            </div>
                         </body>
                         </html>
-                        """
-
-                        plaintext_body = f"""
-                        Reminder: Your Event '{reminder.event.title}' is Happening Soon!
-
-                        Dear {email},
-
-                        This is a reminder for the upcoming event:
-
-                        Event Title: {reminder.event.title}
-                        Date & Time: {reminder.reminder_time.strftime('%Y-%m-%d at %H:%M:%S')}
-                        Location: {reminder.event.location or 'Not specified'}
-                        Room ID: {reminder.event.id}
-
-                        We look forward to your participation! Please make sure to mark your calendar.
-
-                        Best regards,
-                        The Event Team
                         """
 
                         # Send email with both HTML and plaintext content
                         send_email(
                             subject=f"Reminder: Your Event '{reminder.event.title}' is Happening Soon!",
                             recipient=email,
-                            plain_body=plaintext_body,
-                            html_body=html_body  # Adding HTML formatted content
+                            body=body
                         )
 
                         # After sending the email, delete the reminder entry

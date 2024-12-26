@@ -16,11 +16,6 @@ class Settings(BaseSettings):
     Configuration settings class, loads environment variables for application settings.
     Inherits from BaseSettings for Pydantic data validation.
     """
-    # JWT settings for authentication
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
-
     # Database connection settings
     DB_USER: str = os.getenv("DB_USER")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD")
