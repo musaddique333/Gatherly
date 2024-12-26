@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:17.2-alpine3.21
+    container_name: postgres-test
+    restart: always
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
@@ -9,6 +11,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - dodgygeezers_test
 
@@ -21,6 +28,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: registration-microservice-test
     volumes:
     - ./app:/app/app
     - ./pyproject.toml:/app/pyproject.toml
@@ -53,7 +61,8 @@ services:
       - dodgygeezers_test
   
   adminer:
-    image: adminer:latest
+    image: adminer:4.8.1-standalone
+    container_name: adminer-test
     ports:
       - "8080:8080"
     networks:
