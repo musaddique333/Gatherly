@@ -11,6 +11,7 @@ dependencies = [
     "pydantic-settings>=2.6.1",
     "sqlalchemy>=2.0.36",
     "uvicorn>=0.32.1",
+    "redis>=5.2.1",
 ]
 
 [tool.uv]

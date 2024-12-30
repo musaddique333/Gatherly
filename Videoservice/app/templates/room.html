@@ -39,8 +39,10 @@
 
     <script>
         const roomName = "{{ room_name }}";
-        const userId = Math.random().toString(36).substring(2, 8);
-        const signalingServer = `ws://localhost:8000/ws/${roomName}/${userId}`;
+        const userId = "ritz";
+        // const signalingServer = `ws://localhost:8000/ws/${roomName}/${userId}`;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const signalingServer = `${wsProtocol}//${window.location.host}/ws/${roomName}/${userId}`;
         var muteBttn = document.getElementById("mute");
         var muteVidBttn = document.getElementById("video_mute");
         var callEndBttn = document.getElementById("call_end");
@@ -137,17 +139,49 @@
             muteVidBttn.innerText = flag ? "Turn on" : "Turn off";
         }
 
+        // function connectWebSocket() {
+        //     ws = new WebSocket(signalingServer);
+
+        //     ws.onopen = () => {
+        //         console.log("Connected to signaling server");
+        //         startCall();
+        //     };
+
+        //     ws.onclose = () => {
+        //         console.log("WebSocket connection closed. Attempting to reconnect...");
+        //         setTimeout(connectWebSocket, 3000);
+        //     };
+
+        //     ws.onerror = (error) => {
+        //         console.error("WebSocket error:", error);
+        //     };
+        // }
+
+        //redis related
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const baseReconnectDelay = 1000;
+
         function connectWebSocket() {
             ws = new WebSocket(signalingServer);
 
             ws.onopen = () => {
                 console.log("Connected to signaling server");
+                reconnectAttempts = 0;
                 startCall();
             };
 
             ws.onclose = () => {
-                console.log("WebSocket connection closed. Attempting to reconnect...");
-                setTimeout(connectWebSocket, 3000);
+                console.log("WebSocket connection closed.");
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                    console.log(`Attempting to reconnect in ${delay/1000} seconds...`);
+                    setTimeout(connectWebSocket, delay);
+                    reconnectAttempts++;
+                } else {
+                    console.log("Maximum reconnection attempts reached.");
+                    alert("Connection lost. Please refresh the page to try again.");
+                }
             };
 
             ws.onerror = (error) => {
@@ -232,6 +266,7 @@
                         
                         case "chat-history":
                             document.getElementById("chatBox").innerHTML = "";
+                            console.log(messages);
                                 // Display all messages from history
                                 messages.forEach(msg => {
                                     displayMessage(msg.from, msg.message, msg.timestamp);

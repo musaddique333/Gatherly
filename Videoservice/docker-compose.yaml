@@ -1,4 +1,11 @@
 services:
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - dodgygeezers_video_test
   
   videoservice:
       # restart: "no"
@@ -30,18 +37,18 @@ services:
       - "0.0.0.0"
       - --port
       - "8000"
-    env_file:
-      - .env.development
+    # env_file:
+    #   - .env.development
     environment:
-      - DB_HOST=postgres
-      - PYDEVD_DISABLE_FILE_VALIDATION=1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
-      - postgres
+      - redis
     networks:
       - dodgygeezers_video_test
 
 volumes:
-  postgres_data:
+  redis_data:
 
 networks:
   dodgygeezers_video_test:
