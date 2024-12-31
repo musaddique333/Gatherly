@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../Room.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+
+import ChatBox from "../components/chats";
 
 const Room = () => {
   const [localStream, setLocalStream] = useState(null);
@@ -10,6 +11,7 @@ const Room = () => {
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
   const [shareScreen, setShareScreen] = useState(false);
+  const navigation = useNavigate();
 
   const localVideoRef = useRef(null);
   const wsRef = useRef(null);
@@ -177,6 +179,22 @@ const Room = () => {
     setVideoMuted((prev) => !prev);
   };
 
+  const toggleShareScreen = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      screenStreamRef.current = stream;
+      localVideoRef.current.srcObject = stream;
+      setShareScreen(true);
+    } catch (error) {
+      console.error("Error in toggleShareScreen:", error);
+    }
+  };
+
+  const leaveRoom = () => {
+    wsRef.current.close();
+    navigation("/");
+  };
+
   const handleChatSubmit = (e) => {
     if (e.key === "Enter" && chatInput.trim()) {
       const messageData = {
@@ -186,34 +204,58 @@ const Room = () => {
         timestamp: new Date().toLocaleTimeString()
       };
       setChatMessages((prev) => [...prev, messageData]);
-      wsRef.current.send(JSON.stringify(messageData));
       setChatInput("");
+      wsRef.current.send(JSON.stringify(messageData));     
     }
   };
 
   return (
-    <div className="room">
-      <h1>Room: {roomName}</h1>
-      <div id="videos">
-        <video ref={localVideoRef} id="localVideo" autoPlay playsInline muted></video>
+    <div className="max-w-3xl mx-auto text-center">
+      <h1 className="text-2xl font-bold mb-4">Room: {roomName}</h1>
+
+      <div id="videos" className="flex flex-wrap gap-4 justify-center mb-4">
+        <video
+          ref={localVideoRef}
+          id="localVideo"
+          autoPlay
+          playsInline
+          muted
+          className="w-72 h-auto border-2 border-black rounded-md"
+        ></video>
       </div>
-      <input
-        type="text"
-        placeholder="Type a message and press Enter"
-        value={chatInput}
-        onChange={(e) => setChatInput(e.target.value)}
-        onKeyDown={handleChatSubmit}
-      />
-      <div id="chatBox">
-        {chatMessages.map((msg, index) => (
-          <p key={index}>
-            [{msg.timestamp}] {msg.from}: {msg.message}
-          </p>
-        ))}
-      </div>
-      <div className="controls">
-        <button onClick={toggleAudioMute}>{audioMuted ? "Unmute" : "Mute"}</button>
-        <button onClick={toggleVideoMute}>{videoMuted ? "Turn on" : "Turn off"}</button>
+      
+    <ChatBox
+      chatMessages={chatMessages}
+      chatInput={chatInput}
+      setChatInput={setChatInput}
+      handleChatSubmit={handleChatSubmit}
+    />
+
+      <div className="controls mt-4 flex flex-wrap justify-center gap-2">
+        <button
+          onClick={toggleAudioMute}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+        >
+          {audioMuted ? "Unmute" : "Mute"}
+        </button>
+        <button
+          onClick={toggleVideoMute}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+        >
+          {videoMuted ? "Turn on" : "Turn off"}
+        </button>
+        <button
+          onClick={toggleShareScreen}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+        >
+          {shareScreen ? "Stop Sharing" : "Share Screen"}
+        </button>
+        <button
+          onClick={leaveRoom}
+          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
+        >
+          Leave Room
+        </button>
       </div>
     </div>
   );

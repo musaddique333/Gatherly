@@ -30,7 +30,6 @@ const Register = () => {
       //   .then((response) => {
       //     console.log(response);
 
-      //     modalRef.current.openModal();
       //   })
       //   .catch((error) => {
       //     console.log(error);

@@ -27,7 +27,7 @@ export const loginConsts = {
 
 export const register = {
     title : "Sign Up",
-    body : "Breathe easier with Fair",
+    body : "Gather together with Gatherly",
     btn : "Sign Up",
     create_my_acnt : "Create my account",
     registration_modal_title: "Thank you for registering with Fair",

@@ -1,12 +1,18 @@
 import React, { useContext } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import Navbar from './components/Navbar';
+import MainContent from './components/maincontent';
+import ProtectedRoute from './components/ProtectedRoute';
+
+import Home from './pages/Home';
 import VideoCallHome from './pages/lobby'
 import Room from './pages/Room';
-import Navbar from './components/Navbar';
 import BetterLogin from './pages/Login';
-import MainContent from './components/maincontent';
-import Home from './pages/Home';
+import EventForm from './pages/CreateEvent';
+
+import { AuthProvider, AuthContext } from './context/AuthContext';
+
 
 function App() {
 
@@ -24,6 +30,8 @@ function App() {
             <Route path="/login" element={<BetterLogin />} />
             <Route path="/video" element={<VideoCallHome />} />
             <Route path="/room/:roomName" element={<Room />} />
+            <Route path="/user/create-event" element={<EventForm/>} />
+            
           </Routes>
         </div>
       </Router>

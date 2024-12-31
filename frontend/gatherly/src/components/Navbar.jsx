@@ -8,11 +8,13 @@ import navbarHeights from './navbarheights';
 import constants from './../constant';
 import { useTheme } from '@mui/system';
 
+import { AuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
   const theme = useTheme()
   const navigate = useNavigate();
   const [anchorNav, setAnchorNav] = useState(null);
+  // const {token, logout} = useContext(AuthContext);
 
 
   const handleOnClick = () => {
