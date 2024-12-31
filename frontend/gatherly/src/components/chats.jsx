@@ -9,7 +9,7 @@ const ChatBox = ({ chatMessages, chatInput, setChatInput, handleChatSubmit }) =>
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
         {chatMessages.map((msg, index) => (
           <p key={index} className="text-left text-sm">
-            <span className="font-bold">[{msg.timestamp}] {msg.from}:</span> {msg.message}
+            <span className="font-bold">{msg.from}:</span> {msg.message}
           </p>
         ))}
       </div>

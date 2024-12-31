@@ -10,16 +10,12 @@ import VideoCallHome from './pages/lobby'
 import Room from './pages/Room';
 import BetterLogin from './pages/Login';
 import EventForm from './pages/CreateEvent';
+import UserDashboard from './pages/UserDash';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 
 
 function App() {
-
-  //TODO: Get username and room name from DB (setup context)
-  //TODO: Create context for roomname
-  //TODO: Create authcontext
-
   return (
       <Router>
         <Navbar/>
@@ -28,9 +24,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<BetterLogin />} />
-            <Route path="/video" element={<VideoCallHome />} />
-            <Route path="/room/:roomName" element={<Room />} />
-            <Route path="/user/create-event" element={<EventForm/>} />
+            <Route path="/video" element={<VideoCallHome />} /> {/* needs to be protected*/}
+            <Route path="/room/:roomName" element={<Room />} /> {/* needs to be protected*/}
+            <Route path="/user/create-event" element={<EventForm/>} /> {/* needs to be protected*/}
+            <Route path="/user" element={<UserDashboard />} /> {/* needs to be protected*/}
             
           </Routes>
         </div>
