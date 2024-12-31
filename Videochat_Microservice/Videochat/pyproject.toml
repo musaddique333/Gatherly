@@ -1,0 +1,20 @@
+[project]
+name = "videochat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "cryptography>=44.0.0",
+    "debugpy>=1.8.11",
+    "fastapi[standard]>=0.115.6",
+    "grpcio-tools>=1.68.1",
+    "grpcio>=1.68.1",
+    "passlib>=1.7.4",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.7.0",
+    "pydantic>=2.10.4",
+    "pymongo>=4.10.1",
+    "rich>=13.9.4",
+    "uvicorn>=0.34.0",
+]

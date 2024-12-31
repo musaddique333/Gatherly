@@ -12,7 +12,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h localhost || exit 1"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h localhost || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - dodgygeezers
+
+  mongodb:
+    container_name: mongo_db
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD-SHELL", "mongosh --username ${MONGO_USERNAME} --password ${MONGO_PASSWORD} --host localhost --eval 'db.adminCommand({ ping: 1 })' || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -36,8 +54,7 @@ services:
       - dodgygeezers
 
   registration-microservice:
-    container_name: registration_service
-      # restart: "no"
+    container_name: registration_service # restart: "no"
     ports:
       - 8000:8000
       - 50051:50051
@@ -53,8 +70,7 @@ services:
       - dodgygeezers
 
   event-microservice:
-    container_name: event_service
-      # restart: "no"
+    container_name: event_service # restart: "no"
     ports:
       - 8001:8001
     build:
@@ -63,11 +79,23 @@ services:
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     env_file:
       - .env.production
-    environment:
-      - DB_HOST=postgres
     depends_on:
       - postgres
       - redis
+    networks:
+      - dodgygeezers
+
+  video-microservice:
+    container_name: video_service # restart: "no"
+    ports:
+      - 8002:8002
+    build:
+      context: ./Videochat_Microservice/Videochat
+      dockerfile: Dockerfile
+    env_file:
+      - .env.production
+    depends_on:
+      - mongodb
     networks:
       - dodgygeezers
 
@@ -111,6 +139,7 @@ services:
 
 volumes:
   postgres_data:
+  mongo_data:
 
 networks:
   dodgygeezers:
