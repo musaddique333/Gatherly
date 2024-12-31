@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
-ENV ENV=development
+ENV ENV=production
 ENV PYTHONPATH=/app
 
 WORKDIR /app/
@@ -41,4 +41,5 @@ COPY ./app /app/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
