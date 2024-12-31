@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     MONGO_PASSWORD: str = "pass"
     MONGO_PORT: int = 27017
     MONGO_HOST: str = "mongodb"
+    ENCRYPTION_KEY: str = "WsgQ_iWk-kBVn0CjGXcTlYZwyYIVlrJN7yGdmojNVuE="
 
     @property
     def MONGODB_URL(self) -> str:

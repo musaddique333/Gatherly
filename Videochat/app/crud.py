@@ -1,15 +1,19 @@
 from datetime import datetime, timezone
 from app.models import RoomMessage, RoomMessagesResponse
 from app.core.db import collection
+from app.utils import encrypt_message, decrypt_message
 
 # Function to insert a message into a room
 async def insert_message(room_id: str, user_id: str, message: str) -> dict:
     timestamp = datetime.now(timezone.utc)
+
+    encrypted_message = encrypt_message(message)
+
     room_message = {
         "room_id": room_id,
         "messages": [
             {"user_id": user_id, 
-             "message": message, 
+             "message": encrypted_message, 
              "timestamp": timestamp
             }
         ]
@@ -18,21 +22,21 @@ async def insert_message(room_id: str, user_id: str, message: str) -> dict:
     # Check if room exists, otherwise create it
     existing_room = await collection.find_one({"room_id": room_id})
     if existing_room:
-        result = await collection.update_one(
+        await collection.update_one(
             {"room_id": room_id},
             {"$push": 
                     {
                         "messages": 
                                     {
                                     "user_id": user_id, 
-                                    "message": message, 
+                                    "message": encrypted_message, 
                                     "timestamp": timestamp
                                     }
                     }
             }
         )
     else:
-        result = await collection.insert_one(room_message)
+        await collection.insert_one(room_message)
 
     return {"room_id": room_id, "message": "Message added successfully."}
 
@@ -48,7 +52,16 @@ async def get_messages(room_id: str) -> RoomMessagesResponse:
     messages = room.get("messages", [])
     sorted_messages = sorted(messages, key=lambda msg: msg["timestamp"])  # Sort by timestamp in ascending order
 
-    # Convert to Pydantic models
-    filtered_messages = [RoomMessage(**msg) for msg in sorted_messages]
+    # Decrypt messages and convert to Pydantic models
+    filtered_messages = [
+        RoomMessage(
+            **{
+                "user_id": msg["user_id"],
+                "message": decrypt_message(msg["message"]),
+                "timestamp": msg["timestamp"]
+            }
+        )
+        for msg in sorted_messages
+    ]
     
     return RoomMessagesResponse(room_id=room_id, messages=filtered_messages)
