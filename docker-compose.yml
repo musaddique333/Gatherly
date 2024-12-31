@@ -1,7 +1,8 @@
 services:
   postgres:
     container_name: postgres_db
-    image: postgres:14.15-alpine3.21
+    image: postgres:17.2-alpine3.21
+    restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -10,18 +11,31 @@ services:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} -h localhost || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - dodgygeezers
 
   adminer:
     container_name: adminer_ui
-    image: adminer:4.8.1
+    image: adminer:4.8.1-standalone
     ports:
       - 8080:8080
     networks:
       - dodgygeezers
 
-  registration:
+  redis:
+    image: redis:8.0-M02-alpine
+    container_name: redis-db
+    ports:
+      - 6379:6379
+    networks:
+      - dodgygeezers
+
+  registration-microservice:
     container_name: registration_service
       # restart: "no"
     ports:
@@ -33,14 +47,12 @@ services:
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     env_file:
       - .env.production
-    environment:
-      - DB_HOST=postgres
     depends_on:
       - postgres
     networks:
       - dodgygeezers
 
-  event:
+  event-microservice:
     container_name: event_service
       # restart: "no"
     ports:
@@ -55,8 +67,64 @@ services:
       - DB_HOST=postgres
     depends_on:
       - postgres
+      - redis
     networks:
       - dodgygeezers
+
+  celery-worker:
+    build:
+      context: ./Event_Microservice/Event
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    command:
+      - celery
+      - -A
+      - app.core.celery_config.celery_app
+      - worker
+      - --loglevel=info
+    env_file:
+      - .env.production
+    networks:
+      - dodgygeezers
+    depends_on:
+      - redis
+      - event-microservice
+
+  celery-beat:
+    build:
+      context: ./Event_Microservice/Event
+      dockerfile: Dockerfile
+    container_name: celery-beat
+    command:
+      - celery
+      - -A
+      - app.core.celery_config.celery_app
+      - beat
+      - --loglevel=info
+    env_file:
+      - .env.production
+    networks:
+      - dodgygeezers
+    depends_on:
+      - redis
+      - event-microservice
+
+  frontend:
+    container_name: vite_react_dev
+    build:
+      context: ./frontend/gatherly
+      dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+    environment:
+      - VITE_AUTH_URL=http://registration-microservice:8000
+      - VITE_EVENT_URL=http://event-microservice:8000
+    depends_on:
+      - event-microservice
+      - registration-microservice
+    networks:
+      - dodgygeezers
+    command: npm run dev
 
 volumes:
   postgres_data:
