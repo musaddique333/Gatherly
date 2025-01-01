@@ -306,7 +306,7 @@ const Room = () => {
           onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
           className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
         >
-          {shareScreen ? "Stop Sharing" : "Share Screen"}
+          {isScreenSharing ? "Stop Sharing" : "Share Screen"}
         </button>
         <button
           onClick={endCall}
