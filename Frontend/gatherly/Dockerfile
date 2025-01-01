@@ -1,5 +1,5 @@
 # Use official Node.js image for development
-FROM node:20 AS development
+FROM node:20.18-bookworm AS development
 
 # Specify working directory other than /
 WORKDIR /usr/src/app

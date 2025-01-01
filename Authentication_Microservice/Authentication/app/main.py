@@ -1,6 +1,5 @@
 import threading
 from fastapi import FastAPI, HTTPException
-
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.grpc_server import serve

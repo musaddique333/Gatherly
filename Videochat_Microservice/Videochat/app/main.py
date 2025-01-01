@@ -1,5 +1,8 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from uuid import UUID
+
 from app.core.manager import ConnectionManager
 from app.services.wait_for_mongo import wait_for_mongo
 import logging
@@ -12,6 +15,14 @@ logger = logging.getLogger(__name__)
 wait_for_mongo()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 manager = ConnectionManager()
 
@@ -45,7 +56,7 @@ async def join_room(request: Request):
     return {"room_id": room_id, "user_id": user_id}
 
 @app.websocket("/ws/{room_id}/{user_id}")
-async def signaling_endpoint(websocket: WebSocket, room_id: str, user_id: str):
+async def signaling_endpoint(websocket: WebSocket, room_id: UUID, user_id: str):
     """
     WebSocket endpoint to handle real-time communication for a specific room and user.
     

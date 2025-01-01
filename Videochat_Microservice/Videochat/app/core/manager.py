@@ -1,6 +1,8 @@
 from fastapi import WebSocket
 import logging
 import json
+from uuid import UUID
+
 from app.crud import insert_message, get_messages
 from app.models import RoomMessagesResponse
 from datetime import datetime, timezone
@@ -25,7 +27,7 @@ class ConnectionManager:
         """
         self.rooms: dict[str, dict[str, list[WebSocket]]] = {}
 
-    async def connect(self, room_id: str, user_id: str, websocket: WebSocket):
+    async def connect(self, room_id: UUID, user_id: str, websocket: WebSocket):
         """
         Establishes a new WebSocket connection for a user in a room.
 
@@ -49,7 +51,7 @@ class ConnectionManager:
         # Send all previous messages to the new user when they join the room
         await self.send_previous_messages(room_id, websocket)
 
-    def disconnect(self, room_id: str, user_id: str, websocket: WebSocket):
+    def disconnect(self, room_id: UUID, user_id: str, websocket: WebSocket):
         """
         Disconnects a user from a room.
 
@@ -74,7 +76,7 @@ class ConnectionManager:
         # Save this disconnect event to MongoDB as well
         self.broadcast_disconnect_message(room_id, user_id)
 
-    async def broadcast(self, room_id: str, user_id: str, message: str):
+    async def broadcast(self, room_id: UUID, user_id: str, message: str):
         """
         Broadcasts a message to all users in a room.
 
@@ -113,7 +115,7 @@ class ConnectionManager:
         except Exception as e:
             logger.error(f"Error in broadcast: {e}")
 
-    async def send_previous_messages(self, room_id: str, websocket: WebSocket):
+    async def send_previous_messages(self, room_id: UUID, websocket: WebSocket):
         """
         Sends all previous messages from a room to a newly connected user.
 
@@ -137,7 +139,7 @@ class ConnectionManager:
                 }
                 await websocket.send_text(json.dumps(message))  # Send the message as JSON
 
-    async def broadcast_disconnect_message(self, room_id: str, user_id: str):
+    async def broadcast_disconnect_message(self, room_id: UUID, user_id: str):
         """
         Broadcasts a disconnect message when a user leaves the room.
 

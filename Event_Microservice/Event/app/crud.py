@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
 
-from app.models import EventMember, Event, EventCreate, EventUpdate, Reminder, ReminderCreate
+from app.models import EventMember, Event, EventCreate, EventUpdate, Reminder, ReminderCreate, EventOut
 
 # Create a new event
 def create_event(db: Session, event: EventCreate):
@@ -44,6 +44,21 @@ def create_event(db: Session, event: EventCreate):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error creating event: {str(e)}")
 
 # Get all events for a user (that they are a member of)
+def get_all_events(db: Session):
+    """
+    Get a list of events that a user is a member of.
+
+    Args:
+        db (Session): The database session.
+    Returns:
+        List[Event]: List of all events currently active.
+    """
+    try:
+        return db.query(Event).all()
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving events: {str(e)}")
+
+# Get all events for a user (that they are a member of)
 def get_events(db: Session, user_email: str, skip: int = 0, limit: int = 10):
     """
     Get a list of events that a user is a member of.
@@ -73,10 +88,7 @@ def get_event(db: Session, event_id: UUID, user_email: str):
         user_email (str): The user's email to verify membership.
 
     Returns:
-        Event: The event object.
-
-    Raises:
-        HTTPException: If the event does not exist or the user is not a member.
+        dict: A dictionary containing the message and event data (or empty event if not a member).
     """
     db_event = db.query(Event).filter(Event.id == event_id).first()
     if not db_event:
@@ -88,12 +100,26 @@ def get_event(db: Session, event_id: UUID, user_email: str):
     # Ensure the user is part of the event
     is_member = db.query(EventMember).filter(EventMember.event_id == event_id, EventMember.user_email == user_email).first()
     if not is_member:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="User is not a member of this event"
+        # Send the access request to join the event
+        from app.tasks import send_join_request
+        send_join_request.apply_async(
+            args=[user_email, db_event.organizer_email, event_id]
         )
+
+        # Return a response with an empty EventOut and a message
+        empty_event = EventOut(
+            title="", 
+            date=None, 
+            description=None, 
+            location=None, 
+            tags=[], 
+            is_online=False, 
+            id=None
+        )
+        return empty_event
     
     return db_event
+
 
 # Update an event (only if the user is the organizer)
 def update_event(db: Session, event_id: UUID, event: EventUpdate, user_email: str):

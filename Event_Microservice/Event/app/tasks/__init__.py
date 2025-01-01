@@ -268,3 +268,91 @@ def send_reminder():
                 logger.info("No upcoming reminders to send.")
     except Exception as e:
         logger.error(f"Error in send_reminder task: {str(e)}")
+
+
+# Task to send request acces to join the event
+@celery_app.task
+def send_join_request(user_email: str, organiser_email: str, event_id: UUID):
+    """
+    Check for upcoming event reminders and send reminder emails to members.
+    """
+    try:
+        with SessionLocal() as db:
+            # Get the event details
+            event = db.query(Event).filter(Event.id == event_id).first()
+
+            user_body = f"""
+                        <html>
+                        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+                            <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                                <h2 style="color: #333;">Your Request to Join the Event '{event.title}' Has Been Successfully Sent!</h2>
+                                <p style="color: #555; line-height: 1.6;">Dear {user_email},</p>
+                                <p style="color: #555; line-height: 1.6;">We are pleased to inform you that your request to join the event <strong>'{event.title}'</strong> has been successfully sent to the event organizer.</p>
+                                <p style="color: #555; line-height: 1.6;">The event details are as follows:</p>
+                                <ul style="list-style-type: none; padding: 0;">
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                        <strong>Event Title:</strong> {event.title}
+                                    </li>
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                        <strong>Location:</strong> {event.location or 'Not specified'}
+                                    </li>
+                                    <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                        <strong>Date:</strong> {event.date}
+                                    </li>
+                                </ul>
+                                <p style="color: #555; line-height: 1.6;">The event organizer will review your request, and you will be notified if you are granted access to the event.</p>
+                                <p style="font-weight: bold; color: #555;">Best regards,</p>
+                                <p style="color: #555;">The Dodgygeezers Team</p>
+                            </div>
+                        </body>
+                        </html>
+                        """
+
+            organiser_body = f"""
+                            <html>
+                            <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+                                <div style="background-color: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                                    <h2 style="color: #333;">New Access Request for Your Event '{event.title}'</h2>
+                                    <p style="color: #555; line-height: 1.6;">Dear {organiser_email},</p>
+                                    <p style="color: #555; line-height: 1.6;">You have a new request from <strong>{user_email}</strong> to join the event <strong>'{event.title}'</strong>.</p>
+                                    <p style="color: #555; line-height: 1.6;">Here are the event details:</p>
+                                    <ul style="list-style-type: none; padding: 0;">
+                                        <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                            <strong>Room ID:</strong> <strong style="color: red; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{user_email}</strong>
+                                        </li>
+                                        <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                            <strong>Event Title:</strong> {event.title}
+                                        </li>
+                                        <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                            <strong>Location:</strong> {event.location or 'Not specified'}
+                                        </li>
+                                        <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                            <strong>Date:</strong> {event.date}
+                                        </li>
+                                        <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
+                                            <strong>Room ID:</strong> <strong style="color: blue; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{event.id}</strong>
+                                        </li>
+                                    </ul>
+                                    <p style="color: #555; line-height: 1.6;">If you wish to add this user as a member of your event, please log into your admin panel and approve their access request. You can manage participants directly within the app.</p>
+                                    <p style="font-weight: bold; color: #555;">Best regards,</p>
+                                    <p style="color: #555;">The Dodgygeezers Team</p>
+                                </div>
+                            </body>
+                            </html>
+                            """
+
+            # Send email to user that acces request sent succes fully
+            send_email(
+                subject="Your Request to Join the Event '{event.title}' Has Been Successfully Sent",
+                recipient=user_email,
+                body=user_body
+            )
+
+            # send email to orgniser to ad approve the request
+            send_email(
+                subject = "New Access Request for Your Event '{event.title}' from {user_email}",
+                recipient=organiser_email,
+                body=organiser_body
+            ) 
+    except Exception as e:
+        logger.error(f"Error in send_reminder task: {str(e)}")

@@ -4,7 +4,7 @@ from typing import List
 from uuid import UUID
 
 from app.models import EventOut, EventCreate, EventUpdate
-from app.crud import create_event, get_events, get_event, update_event, delete_event
+from app.crud import create_event, get_events, get_event, get_all_events, update_event, delete_event
 from app.core.db import get_db
 from app.utils import validate_user
 from app.tasks import send_event_created_email
@@ -32,6 +32,23 @@ def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
     send_event_created_email.apply_async((created_event.id, event.organizer_email))
     
     return created_event
+
+# Get all events that the user is a member of
+@router.get("/all", response_model=List[EventOut])
+def read_all_events(user_email: str, db: Session = Depends(get_db)):
+    """
+    Retrieves all of events in dodgygeezers.
+    
+    Arguments:
+    - user_email: The user's email to check membership
+    """
+    try:
+        # Validate user's email through an authentication microservice
+        validate_user(user_email)
+    except HTTPException as e:
+        raise e  # Raise the exception if validation fails
+    
+    return get_all_events(db=db)
 
 # Get all events that the user is a member of
 @router.get("/", response_model=List[EventOut])
