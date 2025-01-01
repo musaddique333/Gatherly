@@ -26,9 +26,7 @@ function App() {
             <Route path="/login" element={<BetterLogin />} />
             <Route path="/video" element={<VideoCallHome />} /> {/* needs to be protected*/}
             <Route path="/room/:roomName" element={<Room />} /> {/* needs to be protected*/}
-            <Route path="/user/create-event" element={<EventForm/>} /> {/* needs to be protected*/}
-            <Route path="/user" element={<UserDashboard />} /> {/* needs to be protected*/}
-            
+            <Route path="/user/create-event" element={<EventForm/>} /> {/* needs to be protected*/} 
           </Routes>
         </div>
       </Router>

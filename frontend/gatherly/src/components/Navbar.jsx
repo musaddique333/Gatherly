@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { AppBar, Toolbar, IconButton, Typography, Box, Menu, MenuItem } from "@mui/material";
-import AirIcon from '@mui/icons-material/Air';
+import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import { useNavigate } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import NavbarButton from './navbarbutton';
@@ -96,7 +96,7 @@ const Navbar = () => {
           sx={{ alignItems: 'center' }}
           onClick={handleOnClick}
         >
-          <AirIcon />
+          <PeopleOutlineIcon />
         </IconButton>
         <Typography
           variant="h3"
@@ -111,7 +111,6 @@ const Navbar = () => {
         <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           <NavbarButton to="/">{constants.general.home}</NavbarButton>
           <NavbarButton to="/video">{constants.general.Video}</NavbarButton>
-          <NavbarButton to="/user">{constants.general.user_dash}</NavbarButton>
           {/* {token ? (
             <NavbarButton onClick={handleLogout}>{constants.general.logout}</NavbarButton>
           ) : (
@@ -138,7 +137,6 @@ const Navbar = () => {
         >
           <MenuItem onClick={() => { handleCloseMenu(); navigate('/'); }}>{constants.general.home}</MenuItem>
           <MenuItem onClick={() => { handleCloseMenu(); navigate('/video'); }}>{constants.general.Video}</MenuItem>
-          <MenuItem onClick={() => { handleCloseMenu(); navigate('/user'); }}>{constants.general.user_dash}</MenuItem>
           {/* {token ? (
             <MenuItem onClick={() => { handleCloseMenu(); handleLogout(); }}>{constants.general.logout}</MenuItem>
           ) : (

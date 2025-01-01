@@ -1,7 +1,15 @@
 import React from "react";
 import EventCard from "../components/EventCard";
+import { Button } from "@mui/material";
+import { PlusCircle } from "lucide-react";
+import { AuthContext } from "../context/AuthContext";
+import {useNavigate} from "react-router-dom";
 
 const Home = () => {
+
+  // const {isAuthenticated} = useContext(AuthContext);
+  const navigate = useNavigate();
+
   const sampleEvents = [
     {
       title: "React Meetup",
@@ -44,11 +52,20 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Upcoming Events
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <div className="flex flex-col items-center mb-12">
+          <div className="w-full flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900">
+              Upcoming Events
+            </h1>
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              onClick={() => navigate("/user/create-event")}
+            >
+              <PlusCircle className="w-5 h-5" />
+              Create Event
+            </Button>
+          </div>
+          <p className="text-lg text-gray-600 max-w-2xl">
             Discover and join exciting tech events happening around the world
           </p>
         </div>
