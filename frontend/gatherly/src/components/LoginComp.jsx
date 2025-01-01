@@ -72,7 +72,6 @@ const Login = () => {
           error={emailError !== ''}
           helperText={emailError}
           required
-          color="secondary"
           variant='filled'
           sx={{
             backgroundColor: 'white',
@@ -87,7 +86,6 @@ const Login = () => {
           fullWidth
           margin="normal"
           required
-          color="secondary"
           variant='filled'
           sx={{
             backgroundColor: 'white',

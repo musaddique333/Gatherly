@@ -64,7 +64,6 @@ const Register = () => {
             fullWidth
             margin="normal"
             required
-            color="secondary"
             variant='filled'
             sx={{
               backgroundColor: 'white',
@@ -81,7 +80,6 @@ const Register = () => {
             error={emailError !== ""}
             helperText={emailError}
             required
-            color="secondary"
             variant='filled'
             sx={{
               backgroundColor: 'white',
@@ -97,7 +95,6 @@ const Register = () => {
             fullWidth
             margin="normal"
             required
-            color="secondary"
             variant='filled'
             sx={{
               backgroundColor: 'white',
@@ -113,7 +110,6 @@ const Register = () => {
             fullWidth
             type="password"
             required
-            color="secondary"
             variant='filled'
             sx={{
               backgroundColor: 'white',

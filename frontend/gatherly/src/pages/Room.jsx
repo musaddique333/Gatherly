@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { 
+  Mic, MicOff, Video, VideoOff,   Share,   Phone, 
+  MessageSquare, 
+  Users
+} from 'lucide-react';
 
 import ChatBox from "../components/chats";
 import { AuthContext } from "../context/AuthContext";
@@ -15,6 +20,8 @@ const Room = () => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [showChat, setShowChat] = useState(false);
+  const [participantCount, setParticipantCount] = useState(1);
   
   const wsRef = useRef(null);
   const existingUsers = useRef(new Set());
@@ -247,17 +254,29 @@ const Room = () => {
   const endCall = () => {
     wsRef.current?.send(JSON.stringify({ type: "user-disconnected", from: userId }));
     cleanup();
-    window.location.replace("/");
+    window.location.href = "/";
   };
 
   const addVideoStream = (stream, id) => {
     removeVideo(id);
     const videoElement = document.createElement("video");
     videoElement.id = id;
-    videoElement.autoplay = true;
+    videoElement.autoPlay = true;
     videoElement.playsInline = true;
     videoElement.srcObject = stream;
-    document.getElementById("videos")?.appendChild(videoElement);
+    videoElement.className = "w-full h-full object-cover";
+    
+    const videoContainer = document.createElement("div");
+    videoContainer.className = "relative aspect-video bg-gray-800 rounded-lg overflow-hidden";
+    videoContainer.appendChild(videoElement);
+    
+    const labelContainer = document.createElement("div");
+    labelContainer.className = "absolute bottom-4 left-4 bg-black bg-opacity-50 px-2 py-1 rounded-md text-white";
+    labelContainer.textContent = id === 'localVideo' ? 'You' : 'Participant';
+    videoContainer.appendChild(labelContainer);
+    
+    document.getElementById("videos")?.appendChild(videoContainer);
+    setParticipantCount(prev => prev + 1);
   };
 
   const removeVideo = (id) => {
@@ -268,52 +287,144 @@ const Room = () => {
     }
   };
 
-  return (
-    <div className="max-w-3xl mx-auto text-center">
-      <h1 className="text-2xl font-bold mb-4">Room: {roomName}</h1>
+  // return (
+  //   <div className="max-w-3xl mx-auto text-center">
+  //     <h1 className="text-2xl font-bold mb-4">Room: {roomName}</h1>
 
-      <div id="videos" className="flex flex-wrap gap-4 justify-center mb-4">
-        <video
-          id="localVideo"
-          autoPlay
-          playsInline
-          muted
-          className="w-72 h-auto border-2 border-black rounded-md"
-        ></video>
-      </div>
+  //     <div id="videos" className="flex flex-wrap gap-4 justify-center mb-4">
+  //       <video
+  //         id="localVideo"
+  //         autoPlay
+  //         playsInline
+  //         muted
+  //         className="w-72 h-auto border-2 border-black rounded-md"
+  //       ></video>
+  //     </div>
       
-    <ChatBox
-      chatMessages={chatMessages}
-      chatInput={chatInput}
-      setChatInput={setChatInput}
-      handleChatSubmit={handleChatSubmit}
-    />
+  //   <ChatBox
+  //     chatMessages={chatMessages}
+  //     chatInput={chatInput}
+  //     setChatInput={setChatInput}
+  //     handleChatSubmit={handleChatSubmit}
+  //   />
 
-      <div className="controls mt-4 flex flex-wrap justify-center gap-2">
-        <button
-          onClick={toggleAudio}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
-        >
-          {audioMuted ? "Unmute" : "Mute"}
-        </button>
-        <button
-          onClick={toggleVideo}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
-        >
-          {videoMuted ? "Turn on" : "Turn off"}
-        </button>
-        <button
-          onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
-        >
-          {isScreenSharing ? "Stop Sharing" : "Share Screen"}
-        </button>
-        <button
-          onClick={endCall}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
-        >
-          Leave Room
-        </button>
+  //     <div className="controls mt-4 flex flex-wrap justify-center gap-2">
+  //       <button
+  //         onClick={toggleAudio}
+  //         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+  //       >
+  //         {audioMuted ? "Unmute" : "Mute"}
+  //       </button>
+  //       <button
+  //         onClick={toggleVideo}
+  //         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+  //       >
+  //         {videoMuted ? "Turn on" : "Turn off"}
+  //       </button>
+  //       <button
+  //         onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
+  //         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
+  //       >
+  //         {isScreenSharing ? "Stop Sharing" : "Share Screen"}
+  //       </button>
+  //       <button
+  //         onClick={endCall}
+  //         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
+  //       >
+  //         Leave Room
+  //       </button>
+  //     </div>
+  //   </div>
+  // );
+
+  return (
+    <div className="h-screen bg-gray-900 text-white relative overflow-hidden">
+      <div className="h-full flex">
+        <div className="flex-1 p-4">
+          <div id="videos" className="grid gap-4 h-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
+              <video
+                id="localVideo"
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 px-2 py-1 rounded-md">
+                You {audioMuted && <MicOff className="inline w-4 h-4 ml-2" />}
+              </div>
+            </div>
+          </div>
+        </div>
+        {showChat && (
+          <div className="w-80 bg-gray-800 border-l border-gray-700">
+            <div className="h-full flex flex-col">
+              <div className="p-4 border-b border-gray-700">
+                <h2 className="text-lg font-semibold">Chat</h2>
+              </div>
+              <ChatBox
+                chatMessages={chatMessages}
+                chatInput={chatInput}
+                setChatInput={setChatInput}
+                handleChatSubmit={handleChatSubmit}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="absolute top-4 left-4 bg-gray-800 bg-opacity-90 rounded-lg px-4 py-2">
+        {roomName}
+      </div>
+      <div className="absolute top-4 right-4 bg-gray-800 bg-opacity-90 rounded-lg px-4 py-2 flex items-center gap-2">
+        <Users className="w-5 h-5" />
+        {existingUsers.current.size + 1}
+      </div>
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 transition-opacity duration-300 opacity-100">
+        <div className="bg-gray-800 rounded-full px-6 py-3 flex items-center gap-6">
+          <button
+            onClick={toggleAudio}
+            className={`p-3 rounded-full hover:bg-gray-700 ${
+              audioMuted ? 'bg-red-500 hover:bg-red-600' : ''
+            }`}
+            title={audioMuted ? "Unmute" : "Mute"}
+          >
+            {audioMuted ? <MicOff /> : <Mic />}
+          </button>
+          <button
+            onClick={toggleVideo}
+            className={`p-3 rounded-full hover:bg-gray-700 ${
+              videoMuted ? 'bg-red-500 hover:bg-red-600' : ''
+            }`}
+            title={videoMuted ? "Turn on camera" : "Turn off camera"}
+          >
+            {videoMuted ? <VideoOff /> : <Video/>}
+          </button>
+          <button
+            onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
+            className={`p-3 rounded-full hover:bg-gray-700 ${
+              isScreenSharing ? 'bg-blue-500 hover:bg-blue-600' : ''
+            }`}
+            title={isScreenSharing ? "Stop sharing" : "Share screen"}
+          >
+            <Share />
+          </button>
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className={`p-3 rounded-full hover:bg-gray-700 ${
+              showChat ? 'bg-blue-500 hover:bg-blue-600' : ''
+            }`}
+            title="Toggle chat"
+          >
+            <MessageSquare />
+          </button>
+          <button
+            onClick={endCall}
+            className="p-3 rounded-full bg-red-500 hover:bg-red-600"
+            title="Leave call"
+          >
+            <Phone className="transform rotate-135" />
+          </button>
+        </div>
       </div>
     </div>
   );
