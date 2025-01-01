@@ -42,4 +42,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
 # CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
