@@ -142,15 +142,22 @@ services:
     build:
       context: ./Frontend/gatherly
       dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: ./Frontend/gatherly
+        target: /usr/src/app/
+      - type: volume
+        target: /usr/src/app/node_modules 
     ports:
       - 5173:5173
     environment:
       - VITE_AUTH_URL=http://registration-microservice:8000
-      - VITE_EVENT_URL=http://event-microservice:8000
+      - VITE_EVENT_URL=http://event-microservice:8001
+      - VITE_VIDEO_URL=http://video-microservice:8002
     depends_on:
       - event-microservice
       - registration-microservice
-      - Videochat_Microservice
+      - video-microservice
     networks:
       - dodgygeezers
     command: npm run dev

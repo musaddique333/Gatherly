@@ -8,6 +8,9 @@ dns.setDefaultResultOrder('verbatim');
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0', // Ensure Vite listens on all network interfaces
+    port: 5173, // Define the port explicitly
+    strictPort: true, // Exit if the port is already in use
     proxy: {
       '/api/registration': {
         target: 'http://registration-microservice:8000',
@@ -18,7 +21,13 @@ export default defineConfig({
       '/api/event': {
         target: 'http://event-microservice:8001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/registration\/node/, ''),
+        rewrite: (path) => path.replace(/^\/api\/event/, ''),
+        secure: false,
+      },
+      '/api/video': {
+        target: 'http://video-microservice:8002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/video/, ''),
         secure: false,
       },
     },

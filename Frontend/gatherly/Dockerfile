@@ -1,20 +1,18 @@
 # Use official Node.js image for development
 FROM node:20 AS development
 
-# Set the working directory in the container
-WORKDIR /app
+# Specify working directory other than /
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json first to leverage Docker caching
+# Copy only files required to install
+# dependencies (better layer caching)
 COPY package*.json ./
 
-# Install all dependencies (including development dependencies)
-RUN npm install
+# Use cache mount to speed up install of existing dependencies
+RUN --mount=type=cache,target=/usr/src/app/.npm \
+  npm set cache /usr/src/app/.npm && \
+  npm install
 
-# Copy the rest of the app's source code (this will happen after dependencies are installed)
 COPY . .
 
-# Expose the port for Vite's development server (typically 5173 for Vite)
-EXPOSE 5173
-
-# Start the Vite development server
 CMD ["npm", "run", "dev"]
