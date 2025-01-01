@@ -237,19 +237,19 @@ const Room = () => {
   };
 
   const handleChatSubmit = (e) => {
-    e.preventDefault();
-    if (chatInput.trim()) {
+    if (e.key === "Enter" && chatInput.trim()) {
       const messageData = {
         type: "chat-message",
-        from: userId,
-        message: chatInput,
+        from: userId.current,
+        message: chatInput.trim(),
         timestamp: new Date().toLocaleTimeString()
       };
-      wsRef.current?.send(JSON.stringify(messageData));
-      setChatMessages(prev => [...prev, messageData]);
-      setChatInput('');
+      setChatMessages((prev) => [...prev, messageData]);
+      setChatInput("");
+      wsRef.current.send(JSON.stringify(messageData));     
     }
   };
+
 
   const endCall = () => {
     wsRef.current?.send(JSON.stringify({ type: "user-disconnected", from: userId }));
@@ -286,56 +286,6 @@ const Room = () => {
       videoElement.remove();
     }
   };
-
-  // return (
-  //   <div className="max-w-3xl mx-auto text-center">
-  //     <h1 className="text-2xl font-bold mb-4">Room: {roomName}</h1>
-
-  //     <div id="videos" className="flex flex-wrap gap-4 justify-center mb-4">
-  //       <video
-  //         id="localVideo"
-  //         autoPlay
-  //         playsInline
-  //         muted
-  //         className="w-72 h-auto border-2 border-black rounded-md"
-  //       ></video>
-  //     </div>
-      
-  //   <ChatBox
-  //     chatMessages={chatMessages}
-  //     chatInput={chatInput}
-  //     setChatInput={setChatInput}
-  //     handleChatSubmit={handleChatSubmit}
-  //   />
-
-  //     <div className="controls mt-4 flex flex-wrap justify-center gap-2">
-  //       <button
-  //         onClick={toggleAudio}
-  //         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
-  //       >
-  //         {audioMuted ? "Unmute" : "Mute"}
-  //       </button>
-  //       <button
-  //         onClick={toggleVideo}
-  //         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
-  //       >
-  //         {videoMuted ? "Turn on" : "Turn off"}
-  //       </button>
-  //       <button
-  //         onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
-  //         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700"
-  //       >
-  //         {isScreenSharing ? "Stop Sharing" : "Share Screen"}
-  //       </button>
-  //       <button
-  //         onClick={endCall}
-  //         className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
-  //       >
-  //         Leave Room
-  //       </button>
-  //     </div>
-  //   </div>
-  // );
 
   return (
     <div className="h-screen bg-gray-900 text-white relative overflow-hidden">

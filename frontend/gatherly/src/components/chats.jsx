@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const ChatBox = ({ chatMessages, chatInput, setChatInput, handleChatSubmit }) => {
   return (
-    <div className="h-96 w-full border border-gray-300 rounded-md bg-white flex flex-col">
+    <div className="h-96 w-full border border-gray-300 rounded-md bg-white text-black flex flex-col">
       <div className="flex items-center justify-between p-2 border-b border-gray-300 bg-gray-100">
         <h2 className="text-lg font-semibold">Live Chat</h2>
       </div>

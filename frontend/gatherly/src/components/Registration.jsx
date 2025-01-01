@@ -2,9 +2,7 @@ import { useState,  useRef } from "react";
 import { TextField, Button } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import constants from "./../constant";
-// import axiosInstance from "../axios";
-// import CustomModal from "../components/custommodal";
-// import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import { authAxiosInstance } from '../axiosInstance';
 
 const Register = () => {
   const [userName, setUserName] = useState("");
@@ -19,25 +17,24 @@ const Register = () => {
       setEmailError("Invalid email address");
     } else {
       const registerData = {
-        userName: userName,
-        userEmail: userEmail,
-        userPhone: userPhone,
-        userPassword: userPassword,
+        username: userName,
+        email: userEmail,
+        phone_number: userPhone,
+        password: userPassword,
       };
 
-      // axiosInstance
-      //   .post("/auth/registerUser", registerData)
-      //   .then((response) => {
-      //     console.log(response);
-
-      //   })
-      //   .catch((error) => {
-      //     console.log(error);
-      //     if (error.response && error.response.status === 409) {
-      //       console.log("Email is already in use!");
-      //       alert("Email is already in use!")
-      //     }
-      //   });
+      authAxiosInstance
+        .post("/signup", registerData)
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((error) => {
+          console.log(error);
+          if (error.response && error.response.status === 409) {
+            console.log("Email is already in use!");
+            alert("Email is already in use!")
+          }
+        });
     }
   };
 
@@ -63,7 +60,6 @@ const Register = () => {
             onChange={(e) => setUserName(e.target.value)}
             fullWidth
             margin="normal"
-            required
             variant='filled'
             sx={{
               backgroundColor: 'white',

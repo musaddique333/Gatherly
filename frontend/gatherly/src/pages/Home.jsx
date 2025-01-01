@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useContext} from "react";
 import EventCard from "../components/EventCard";
 import { Button } from "@mui/material";
 import { PlusCircle } from "lucide-react";
@@ -7,7 +7,7 @@ import {useNavigate} from "react-router-dom";
 
 const Home = () => {
 
-  // const {isAuthenticated} = useContext(AuthContext);
+  const {isAuthenticated} = useContext(AuthContext);
   const navigate = useNavigate();
 
   const sampleEvents = [

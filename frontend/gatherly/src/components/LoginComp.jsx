@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
 
 import constant from '../constant';
-// import axiosInstance from '../axios';
+import { authAxiosInstance } from '../axiosInstance';
 import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
@@ -12,7 +12,7 @@ const Login = () => {
   const [userPassword, setUserPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const navigate = useNavigate();
-  // const { login } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -20,34 +20,34 @@ const Login = () => {
       setEmailError('Invalid email address');
     } else {
       const loginData = {
-        userEmail: userEmail,
-        userPassword: userPassword,
+        email: userEmail,
+        password: userPassword,
       };
 
-      // axiosInstance.post('/auth/signin', loginData)
-      //   .then(response => {
-      //     const token = response.data.token;
-      //     const userId = response.data.userId; // Assuming the response contains userId
-      //     login(token, userId);
-      //     if (response.status === 200) {
-      //       navigate('/user');
-      //     }
-      //   })
-      //   .catch(error => {
-      //     console.log(error);
-      //     if (error.response) {
-      //       if (error.response.status === 401) {
-      //         alert('Incorrect email or password')
-      //         console.log('Incorrect email or password!');
-      //       } else if (error.response.status === 403) {
-      //         console.log('User account is inactive. Please contact support.');
-      //         alert('User account is inactive. Please contact support.')
-      //       } else if (error.response.status === 404) {
-      //         console.log('User not found!');
-      //         alert('User not found')
-      //       }
-      //     }
-      //   });
+      authAxiosInstance.post('/login', loginData)
+        .then(response => {
+          const token = response.data.token;
+          const userId = userEmail;
+          login(token, userId);
+          if (response.status === 200) {
+            navigate('/');
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          if (error.response) {
+            if (error.response.status === 401) {
+              alert('Incorrect email or password')
+              console.log('Incorrect email or password!');
+            } else if (error.response.status === 403) {
+              console.log('User account is inactive. Please contact support.');
+              alert('User account is inactive. Please contact support.')
+            } else if (error.response.status === 404) {
+              console.log('User not found!');
+              alert('User not found')
+            }
+          }
+        });
     }
   };
 

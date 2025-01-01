@@ -14,7 +14,7 @@ const Navbar = () => {
   const theme = useTheme()
   const navigate = useNavigate();
   const [anchorNav, setAnchorNav] = useState(null);
-  // const {token, logout} = useContext(AuthContext);
+  const {token, logout} = useContext(AuthContext);
 
 
   const handleOnClick = () => {
