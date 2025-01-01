@@ -29,7 +29,7 @@ function App() {
                 {/*<Route path="/user/create-event" element={<EventForm/>} />*/} {/* needs to be protected*/} 
                 <Route path='/video' element={<ProtectedRoute element={<VideoCallHome />} />} />
                 <Route path='/room/:roomName' element={<ProtectedRoute element={<Room />} />} />
-                <Route path='/user/create-event' element={<ProtectedRoute element={<EventForm />} />} />
+                <Route path='/create-event' element={<ProtectedRoute element={<EventForm />} />} />
               </Routes>
             </div>
           </Router>

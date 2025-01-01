@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const authAxiosInstance = axios.create({
-  baseURL: 'http://localhost:8000/',
+  baseURL: 'http://localhost:8000',
   headers: {
     'Accept': '*/*',
     'Content-Type': 'application/json',
@@ -10,7 +10,7 @@ const authAxiosInstance = axios.create({
 });
 
 const eventAxiosInstance = axios.create({
-    baseURL: 'http://localhost:8001/',
+    baseURL: 'http://localhost:8001',
     headers: {
       'Accept': '*/*',
       'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ const eventAxiosInstance = axios.create({
   });
 
   const videoAxiosInstance = axios.create({
-    baseURL: 'http://localhost:8002/',
+    baseURL: 'http://localhost:8002',
     headers: {
       'Accept': '*/*',
       'Content-Type': 'application/json',

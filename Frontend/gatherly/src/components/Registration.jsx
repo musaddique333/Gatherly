@@ -24,7 +24,7 @@ const Register = () => {
       };
 
       authAxiosInstance
-        .post("/signup", registerData)
+        .post("/auth/signup", registerData)
         .then((response) => {
           console.log(response);
         })
@@ -87,7 +87,7 @@ const Register = () => {
           <TextField
             label="Phone number"
             value={userPhone}
-            onChange={(e) => setUserEmail(e.target.value)}
+            onChange={(e) => setUserPhone(e.target.value)}
             fullWidth
             margin="normal"
             required

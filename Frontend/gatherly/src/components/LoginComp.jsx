@@ -24,7 +24,7 @@ const Login = () => {
         password: userPassword,
       };
 
-      authAxiosInstance.post('/login', loginData)
+      authAxiosInstance.post('/auth/login', loginData)
         .then(response => {
           const token = response.data.token;
           const userId = userEmail;
