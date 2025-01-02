@@ -108,6 +108,7 @@ class EventBase(BaseModel):
         location (Optional[str]): Physical or virtual location of the event.
         tags (Optional[List[str]]): List of tags for the event.
         is_online (bool): Indicates if the event is online.
+        organiser_email (str): Indicates organisers email
     """
     title: str
     date: datetime
@@ -115,6 +116,7 @@ class EventBase(BaseModel):
     location: Optional[str]
     tags: Optional[List[str]] = []
     is_online: bool
+    organizer_email: str
 
 
 class EventCreate(EventBase):

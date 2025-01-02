@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import React, { useState, useContext } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { Autocomplete } from "@mui/material";
-
+import Swal from 'sweetalert2';
 import { eventAxiosInstance } from "../axiosInstance";
 
 const EventForm = () => {
+  const { userId } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
     title: "",
     date: "",
@@ -15,7 +18,7 @@ const EventForm = () => {
     location: "",
     tags: [],
     is_online: true,
-    organizer_email: "",
+    organizer_email: userId,
   });
 
   const handleChange = (e) => {
@@ -42,18 +45,34 @@ const EventForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData.tags);
-    eventAxiosInstance.post("/event/", {
-      params:{
-        event: formData
-      }
-    })
-    .then((response) => {
-      console.log(response);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+    
+    // Convert date to ISO format before sending it to the server
+    const formattedDate = new Date(formData.date).toISOString();
+  
+    const eventData = {
+      ...formData,
+      date: formattedDate,
+    };
+  
+    // Send the event data to the backend
+    eventAxiosInstance
+      .post("/event/", eventData)
+      .then((response) => {
+        // Show success message with SweetAlert
+        Swal.fire({
+          icon: "success",
+          title: "Event Created Successfully",
+          text: "Your event has been successfully created and added.",
+        });
+      })
+      .catch((error) => {
+        // Show error message with SweetAlert
+        Swal.fire({
+          icon: "error",
+          title: "Event Creation Failed",
+          text: error.response?.data?.message || "Something went wrong.",
+        });
+      });
   };
 
   return (
@@ -119,22 +138,11 @@ const EventForm = () => {
         label="Is Online?"
       />
 
-      <TextField
-        label="Organizer Email"
-        name="organizer_email"
-        type="email"
-        value={formData.organizer_email}
-        onChange={handleChange}
-        required
-        fullWidth
-      />
-
       <Button
         type="submit"
         variant="contained"
         color="primary"
         className="mt-4"
-        onClick={handleSubmit}
       >
         Create Event
       </Button>

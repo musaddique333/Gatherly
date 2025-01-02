@@ -61,14 +61,14 @@ const EventCard = ({eventdata}) => {
             ))}
           </div>
         )}
-        <p className="text-gray-500 text-xs">Organizer: {eventdata.organizerEmail}</p>
+        <p className="text-gray-500 text-xs">Organizer: {eventdata.organizer_email}</p>
       </div>
       <div className="px-6 py-4">
         <Button
           variant="contained"
           color="primary"
           fullWidth
-          // onClick={onJoinEvent}
+          onClick={onJoinEvent}
         >
           Join Event
         </Button>

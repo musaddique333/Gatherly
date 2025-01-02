@@ -39,7 +39,7 @@ const EventCardWithoutJoin = ({eventdata}) => {
             ))}
           </div>
         )}
-        <p className="text-gray-500 text-xs">Organizer: {eventdata.organizerEmail}</p>
+        <p className="text-gray-500 text-xs">Organizer: {eventdata.organizer_email}</p>
       </div>
     </div>
   );
