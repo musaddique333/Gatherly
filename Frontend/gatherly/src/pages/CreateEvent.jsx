@@ -42,6 +42,7 @@ const EventForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log(formData.tags);
     eventAxiosInstance.post("/event/", {
       params:{
         event: formData

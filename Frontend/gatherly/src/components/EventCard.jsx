@@ -24,6 +24,7 @@ const EventCard = ({eventdata}) => {
           title: "Joined Event",
           text: "Hooray! Organizer will shortly add you to the event!",
         });
+        
       }
     })
     .catch((error) => {
