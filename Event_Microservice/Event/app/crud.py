@@ -59,21 +59,19 @@ def get_all_events(db: Session):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving events: {str(e)}")
 
 # Get all events for a user (that they are a member of)
-def get_events(db: Session, user_email: str, skip: int = 0, limit: int = 10):
+def get_events(db: Session, user_email: str):
     """
     Get a list of events that a user is a member of.
 
     Args:
         db (Session): The database session.
         user_email (str): The user's email to check membership.
-        skip (int, optional): The number of events to skip. Defaults to 0.
-        limit (int, optional): The number of events to limit. Defaults to 10.
 
     Returns:
         List[Event]: List of events the user is a member of.
     """
     try:
-        return db.query(Event).join(EventMember).filter(EventMember.user_email == user_email).offset(skip).limit(limit).all()
+        return db.query(Event).join(EventMember).filter(EventMember.user_email == user_email).all()
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving events: {str(e)}")
 

@@ -52,16 +52,14 @@ def read_all_events(db: Session = Depends(get_db)):
 
 # Get all events that the user is a member of
 @router.get("/", response_model=List[EventOut])
-def read_events(user_email: str, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def read_events(user_email: str, db: Session = Depends(get_db)):
     """
     Retrieves a list of events where the user is a member.
     
     Arguments:
     - user_email: The user's email to check membership
-    - skip: Number of events to skip (pagination)
-    - limit: Maximum number of events to return (pagination)
     """
-    return get_events(db=db, user_email=user_email, skip=skip, limit=limit)
+    return get_events(db=db, user_email=user_email)
 
 # Get a single event by its ID (only if the user is a member)
 @router.get("/{event_id}", response_model=EventOut)
