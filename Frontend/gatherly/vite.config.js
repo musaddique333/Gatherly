@@ -10,7 +10,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Ensure Vite listens on all network interfaces
     port: 5173, // Define the port explicitlye
-    strictPort: true, // Exit if the port is already in use
+    strictPort: true,
+    watch: {
+      usePolling: true,
+    } // Exit if the port is already in use
     // proxy: {
     //   '/api/registration': {
     //     target: 'http://registration-microservice:8000',

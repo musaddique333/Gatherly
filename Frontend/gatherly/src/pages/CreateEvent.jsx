@@ -5,6 +5,8 @@ import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { Autocomplete } from "@mui/material";
 
+import { eventAxiosInstance } from "../axiosInstance";
+
 const EventForm = () => {
   const [formData, setFormData] = useState({
     title: "",
@@ -40,8 +42,17 @@ const EventForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add API call or state update logic here
+    eventAxiosInstance.post("/event/", {
+      params:{
+        event: formData
+      }
+    })
+    .then((response) => {
+      console.log(response);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
   };
 
   return (

@@ -35,18 +35,18 @@ def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
 
 # Get all events that the user is a member of
 @router.get("/all", response_model=List[EventOut])
-def read_all_events(user_email: str, db: Session = Depends(get_db)):
+def read_all_events(db: Session = Depends(get_db)):
     """
     Retrieves all of events in dodgygeezers.
     
     Arguments:
     - user_email: The user's email to check membership
     """
-    try:
-        # Validate user's email through an authentication microservice
-        validate_user(user_email)
-    except HTTPException as e:
-        raise e  # Raise the exception if validation fails
+    # try:
+    #     # Validate user's email through an authentication microservice
+    #     validate_user(user_email)
+    # except HTTPException as e:
+    #     raise e  # Raise the exception if validation fails
     
     return get_all_events(db=db)
 

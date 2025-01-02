@@ -3,6 +3,7 @@ import { TextField, Button } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import constants from "./../constant";
 import { authAxiosInstance } from '../axiosInstance';
+import Swal from 'sweetalert2';
 
 const Register = () => {
   const [userName, setUserName] = useState("");
@@ -27,9 +28,19 @@ const Register = () => {
         .post("/auth/signup", registerData)
         .then((response) => {
           console.log(response);
+          Swal.fire({
+            icon: "success",
+            title: "Registration Successful",
+            text: response.data.message,
+          })
         })
         .catch((error) => {
           console.log(error);
+          Swal.fire({
+            icon: "error",
+            title: "Registration Failed",
+            text: error.response.data.message,
+          })
           if (error.response && error.response.status === 409) {
             console.log("Email is already in use!");
             alert("Email is already in use!")

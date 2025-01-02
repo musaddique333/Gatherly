@@ -10,6 +10,8 @@ import VideoCallHome from './pages/lobby'
 import Room from './pages/Room';
 import BetterLogin from './pages/Login';
 import EventForm from './pages/CreateEvent';
+import UserDashboard from './pages/UserDashboard';
+import AddMember from './pages/AddMember';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 
@@ -30,6 +32,8 @@ function App() {
                 <Route path='/video' element={<ProtectedRoute element={<VideoCallHome />} />} />
                 <Route path='/room/:roomName' element={<ProtectedRoute element={<Room />} />} />
                 <Route path='/create-event' element={<ProtectedRoute element={<EventForm />} />} />
+                <Route path='/user/dashboard' element={<ProtectedRoute element={<UserDashboard />} />} />
+                <Route path='/user/add-member' element={<ProtectedRoute element={<AddMember />} />} />
               </Routes>
             </div>
           </Router>
