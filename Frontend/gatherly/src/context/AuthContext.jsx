@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import Swal from 'sweetalert2';
 
 const AuthContext = createContext();
 
@@ -38,6 +39,11 @@ const AuthProvider = ({ children }) => {
     setToken(null);
     setUserId(null);
     setIsAuthenticated(false);
+    Swal.fire({
+      icon: 'success',
+      title: 'Logout Successful',
+    })
+    
   };
 
   return (

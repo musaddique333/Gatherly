@@ -27,7 +27,6 @@ const Register = () => {
       authAxiosInstance
         .post("/auth/signup", registerData)
         .then((response) => {
-          console.log(response);
           Swal.fire({
             icon: "success",
             title: "Registration Successful",
@@ -35,15 +34,16 @@ const Register = () => {
           })
         })
         .catch((error) => {
-          console.log(error);
           Swal.fire({
             icon: "error",
             title: "Registration Failed",
             text: error.response.data.message,
           })
           if (error.response && error.response.status === 409) {
-            console.log("Email is already in use!");
-            alert("Email is already in use!")
+            Swal.fire({
+              icon: "error",
+              title: "Registration Failed",
+              text: "Email is already in use!",})
           }
         });
     }
