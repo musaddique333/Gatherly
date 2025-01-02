@@ -37,7 +37,7 @@ class Event(Base):
     """
     __tablename__ = "events"
 
-    id = Column(UUID, primary_key=True, index=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
     title = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)
     description = Column(Text, nullable=True)
@@ -57,7 +57,7 @@ class EventMember(Base):
 
     Attributes:
         id (int): Primary key of the event member.
-        event_id (int): Foreign key to the Event table.
+        event_id (UUID): Foreign key to the Event table.
         user_email (str): Email of the member participating in the event.
     """
     __tablename__ = "event_members"
@@ -79,7 +79,7 @@ class Reminder(Base):
 
     Attributes:
         id (int): Primary key of the reminder.
-        event_id (int): Foreign key to the Event table.
+        event_id (UUID): Foreign key to the Event table.
         user_email (str): Email of the user to receive the reminder.
         reminder_time (datetime): Time of the reminder.
     """
