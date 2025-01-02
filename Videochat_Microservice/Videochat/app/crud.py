@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from uuid import UUID
 
 from app.models import RoomMessage, RoomMessagesResponse
 from app.core.db import collection
@@ -10,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Function to insert a message into a room
-async def insert_message(room_id: UUID, user_id: str, message: str) -> dict:
+async def insert_message(room_id: str, user_id: str, message: str) -> dict:
     """
     Insert a message into a specific room. If the room doesn't exist, it will be created.
 
@@ -67,7 +66,7 @@ async def insert_message(room_id: UUID, user_id: str, message: str) -> dict:
         raise Exception(f"Error inserting message into room {room_id}: {e}")
 
 # Function to get all messages from a room
-async def get_messages(room_id: UUID) -> RoomMessagesResponse:
+async def get_messages(room_id: str) -> RoomMessagesResponse:
     """
     Retrieve all messages from a specific room, sorted by timestamp, and decrypt the messages.
 

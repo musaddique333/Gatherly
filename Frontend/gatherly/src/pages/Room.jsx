@@ -8,11 +8,14 @@ import {
 
 import ChatBox from "../components/chats";
 import { AuthContext } from "../context/AuthContext";
+import { use } from "react";
 
 const Room = () => {
   const {roomName} = useParams();
-// const {userId} = useContext(AuthContext); //DO NOT REMOVE THIS LINE
-  const userId = useRef(Math.random().toString(36).substring(2, 8)); //TODO: repalce userId.current with userId
+  // const {userId} = useContext(AuthContext);
+  const userId = localStorage.getItem('userId');
+
+  console.log("Ye  hai madachod ", userId);
   const [peerConnections, setPeerConnections] = useState({});
   const [localStream, setLocalStream] = useState(null);
   const [audioMuted, setAudioMuted] = useState(false);
@@ -38,8 +41,8 @@ const Room = () => {
   }, []);
 
   const connectWebSocket = () => {
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const signalingServer = `${wsProtocol}//${window.location.host}/ws/${roomName}/${userId}`;
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const signalingServer = `${wsProtocol}//localhost:8002/ws/${roomName}/${userId}`;
     
     wsRef.current = new WebSocket(signalingServer);
 
@@ -53,7 +56,7 @@ const Room = () => {
       console.log("WebSocket connection closed.");
       if (reconnectAttemptsRef.current < maxReconnectAttempts) {
         const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-        console.log(`Attempting to reconnect in ${delay/1000} seconds...`);
+        console.log(`Attempting to reconnect in ${delay * 1000} seconds...`);
         setTimeout(connectWebSocket, delay);
         reconnectAttemptsRef.current++;
       } else {
@@ -142,7 +145,7 @@ const Room = () => {
             }
             break;
 
-          case "chat-message":
+          case "message":
             setChatMessages(prev => [...prev, { from, message: chatMessage, timestamp }]);
             break;
 
@@ -174,7 +177,7 @@ const Room = () => {
         }
       };
 
-      wsRef.current?.send(JSON.stringify({ type: "new-user", from: userId }));
+      wsRef.current?.send(JSON.stringify({ type: "new-user", from: userId, message: userId + " has joined" }));
     } catch (error) {
       console.error("Error in startCall:", error);
     }
@@ -239,8 +242,8 @@ const Room = () => {
   const handleChatSubmit = (e) => {
     if (e.key === "Enter" && chatInput.trim()) {
       const messageData = {
-        type: "chat-message",
-        from: userId.current,
+        type: "message",
+        from: userId,
         message: chatInput.trim(),
         timestamp: new Date().toLocaleTimeString()
       };

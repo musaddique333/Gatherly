@@ -110,10 +110,10 @@ const Navbar = () => {
         </Typography>
         <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           <NavbarButton to="/">{constants.general.home}</NavbarButton>
-          <NavbarButton to = "/user/dashboard">User Dashboard</NavbarButton>
+          <NavbarButton to ="/user/dashboard">User Dashboard</NavbarButton>
           <NavbarButton to="/video">{constants.general.Video}</NavbarButton>
           {token ? (
-            <NavbarButton onClick={handleLogout}>{constants.general.logout}</NavbarButton>
+            <NavbarButton to ="/login" onClick={handleLogout}>{constants.general.logout}</NavbarButton>
           ) : (
             <NavbarButton to="/login">{constants.general.login_register}</NavbarButton>
           )}

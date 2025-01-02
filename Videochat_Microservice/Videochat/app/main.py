@@ -1,8 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from uuid import UUID
-
 from app.core.manager import ConnectionManager
 from app.services.wait_for_mongo import wait_for_mongo
 import logging
@@ -26,37 +24,8 @@ app.add_middleware(
 
 manager = ConnectionManager()
 
-@app.get("/")
-async def get_home():
-    """
-    Home page route that provides a welcome message and instructions to connect via React.
-    
-    Returns:
-        dict: A message welcoming users to the WebSocket Room API.
-    """
-    return {"message": "Welcome to the WebSocket Room API! Connect via React."}
-
-@app.get("/room/")
-async def join_room(request: Request):
-    """
-    API route to join a room by providing the room_id and user_id as query parameters.
-    
-    Args:
-        request (Request): The incoming request object that holds the query parameters.
-        
-    Returns:
-        dict: Room ID and User ID if provided, or an error message if either is missing.
-    """
-    room_id = request.query_params.get("room_id")
-    user_id = request.query_params.get("user_id")
-
-    if not room_id or not user_id:
-        return {"error": "Room ID and User ID are required."}, 400
-
-    return {"room_id": room_id, "user_id": user_id}
-
 @app.websocket("/ws/{room_id}/{user_id}")
-async def signaling_endpoint(websocket: WebSocket, room_id: UUID, user_id: str):
+async def signaling_endpoint(websocket: WebSocket, room_id: str, user_id: str):
     """
     WebSocket endpoint to handle real-time communication for a specific room and user.
     
