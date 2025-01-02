@@ -64,14 +64,16 @@ const EventCard = ({eventdata}) => {
         <p className="text-gray-500 text-xs">Organizer: {eventdata.organizer_email}</p>
       </div>
       <div className="px-6 py-4">
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={onJoinEvent}
-        >
-          Join Event
-        </Button>
+        {eventdata.isMember == false && (
+          <Button 
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={onJoinEvent}
+          >
+            Join Event
+          </Button>
+        )}
       </div>
     </div>
   );

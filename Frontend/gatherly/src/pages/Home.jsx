@@ -1,29 +1,77 @@
-import React, {useState,useEffect, useContext} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import EventCard from "../components/EventCard";
 import { Button } from "@mui/material";
 import { PlusCircle } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { eventAxiosInstance } from "../axiosInstance";
+import Swal from "sweetalert2";
 
 const Home = () => {
-
-  const {isAuthenticated} = useContext(AuthContext);
+  const { isAuthenticated, userId } = useContext(AuthContext);
   const navigate = useNavigate();
-
 
   const [events, setEvents] = useState([]);
 
+  // Fetch all events on initial load
   useEffect(() => {
-      eventAxiosInstance.get("/event/all")
+    eventAxiosInstance
+      .get("/event/all")
       .then((response) => {
-        setEvents(response.data);
+        // Set events with isMember set to false initially
+        const newEvents = response.data.map((event) => ({ ...event, isMember: false }));
+        setEvents(newEvents);
       })
       .catch((error) => {
         console.log(error);
-      })
+      });
   }, []);
 
+  // Fetch user-specific events when authenticated or reset on logout
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Fetch events the user is a part of
+      eventAxiosInstance
+        .get("/event/", {
+          params: {
+            user_email: userId,
+          },
+        })
+        .then((response) => {
+          // Map user events with isMember set to true
+          const userEvents = response.data.map((event) => ({ ...event, isMember: true }));
+
+          // Update the events from /event/all by setting isMember to true for matching event ids
+          setEvents((prevEvents) =>
+            prevEvents.map((event) => {
+              const matchedEvent = userEvents.find((userEvent) => userEvent.id === event.id);
+              if (matchedEvent) {
+                return { ...event, isMember: true }; // Set isMember = true for matching event
+              }
+              return event;
+            })
+          );
+        })
+        .catch((error) => {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Something went wrong!",
+          });
+        });
+    } else {
+      // If not authenticated, reset isMember to false for all events
+      eventAxiosInstance
+        .get("/event/all")
+        .then((response) => {
+          const newEvents = response.data.map((event) => ({ ...event, isMember: false }));
+          setEvents(newEvents);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }, [isAuthenticated, userId]); 
 
   // const sampleEvents = [
   //   {

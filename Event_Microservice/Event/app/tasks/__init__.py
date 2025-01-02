@@ -315,10 +315,10 @@ def send_join_request(user_email: str, organiser_email: str, event_id: UUID):
                                     <h2 style="color: #333;">New Access Request for Your Event '{event.title}'</h2>
                                     <p style="color: #555; line-height: 1.6;">Dear {organiser_email},</p>
                                     <p style="color: #555; line-height: 1.6;">You have a new request from <strong>{user_email}</strong> to join the event <strong>'{event.title}'</strong>.</p>
-                                    <p style="color: #555; line-height: 1.6;">Here are the event details:</p>
+                                    <p style="color: #555; line-height: 1.6;">Here are the event details and user details:</p>
                                     <ul style="list-style-type: none; padding: 0;">
                                         <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
-                                            <strong>Room ID:</strong> <strong style="color: red; background-color: #e7f3ff; padding: 5px; border-radius: 3px;">{user_email}</strong>
+                                            <strong>Requested User:</strong> <strong style="color: red; background-color: #ffcccc; padding: 5px; border-radius: 3px;">{user_email}</strong>
                                         </li>
                                         <li style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #007BFF;">
                                             <strong>Event Title:</strong> {event.title}
@@ -343,14 +343,14 @@ def send_join_request(user_email: str, organiser_email: str, event_id: UUID):
 
             # Send email to user that acces request sent succes fully
             send_email(
-                subject="Your Request to Join the Event '{event.title}' Has Been Successfully Sent",
+                subject=f"Your Request to Join the Event '{event.title}' Has Been Successfully Sent",
                 recipient=user_email,
                 body=user_body
             )
 
             # send email to orgniser to ad approve the request
             send_email(
-                subject = "New Access Request for Your Event '{event.title}' from {user_email}",
+                subject = f"New Access Request for Your Event '{event.title}' from {user_email}",
                 recipient=organiser_email,
                 body=organiser_body
             ) 

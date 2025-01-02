@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
+from datetime import datetime, timezone
 
 from app.models import EventMember, Event, EventCreate, EventUpdate, Reminder, ReminderCreate, EventOut
 
@@ -107,12 +108,13 @@ def get_event(db: Session, event_id: UUID, user_email: str):
         # Return a response with an empty EventOut and a message
         empty_event = EventOut(
             title="", 
-            date=None, 
-            description=None, 
-            location=None, 
+            date=datetime.now(timezone.utc), 
+            description="", 
+            location="", 
             tags=[], 
             is_online=False, 
-            id=None
+            id="ebb1543d-21c2-4ddb-af81-dcea218c8213",
+            organizer_email=user_email
         )
         return empty_event
     
