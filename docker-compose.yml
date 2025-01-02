@@ -146,8 +146,9 @@ services:
       - type: bind
         source: ./Frontend/gatherly
         target: /usr/src/app/
-      - type: volume
-        target: /usr/src/app/node_modules 
+      - type: bind
+        source: ./Frontend/gatherly/node_modules
+        target: /usr/src/app/node_modules
     ports:
       - 5173:5173
     environment:

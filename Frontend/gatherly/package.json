@@ -16,6 +16,8 @@
     "@mui/material": "^5.16.12",
     "@mui/system": "^5.15.20",
     "axios": "^1.7.9",
+    "is-even": "^1.0.0",
+    "is-odd": "^3.0.1",
     "lucide-react": "^0.469.0",
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-normalize": "^10.0.1",
