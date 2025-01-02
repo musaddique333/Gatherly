@@ -40,17 +40,25 @@ const Login = () => {
           }
         })
         .catch(error => {
-          console.log(error);
           if (error.response) {
             if (error.response.status === 401) {
-              alert('Incorrect email or password')
-              console.log('Incorrect email or password!');
+              Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: 'Incorrect email or password',
+              })
             } else if (error.response.status === 403) {
-              console.log('User account is inactive. Please contact support.');
-              alert('User account is inactive. Please contact support.')
+              Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: 'User account is inactive. Please contact support.',
+              })
             } else if (error.response.status === 404) {
-              console.log('User not found!');
-              alert('User not found')
+              Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: 'User not found',
+              })
             }
           }
         });

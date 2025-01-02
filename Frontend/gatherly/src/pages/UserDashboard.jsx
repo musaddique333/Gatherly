@@ -39,15 +39,8 @@ const UserDashboard = () => {
         <div className="flex flex-col items-center mb-12">
           <div className="w-full flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900">
-              Upcoming Events for you !
+              Your Upcoming Events!
             </h1>
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
-              onClick={() => navigate("/user/add-member")}
-            >
-              <PlusCircle className="w-5 h-5" />
-              Add Member
-            </Button>
           </div>
         </div>
         
