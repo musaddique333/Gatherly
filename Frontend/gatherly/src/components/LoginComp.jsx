@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 import constant from '../constant';
 import { authAxiosInstance } from '../axiosInstance';
@@ -26,10 +27,15 @@ const Login = () => {
 
       authAxiosInstance.post('/auth/login', loginData)
         .then(response => {
-          const token = response.data.token;
+          const token = response.data.access_token;
           const userId = userEmail;
           login(token, userId);
           if (response.status === 200) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Login Successful',
+              text: 'Welcome to Gatherly!',
+            })
             navigate('/');
           }
         })

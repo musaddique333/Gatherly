@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import {eventAxiosInstance} from "../axiosInstance";
@@ -33,6 +33,7 @@ const AddMember = () => {
         onSubmit={handleSubmit}
         className="flex flex-col gap-4 p-4 max-w-lg mx-auto bg-white shadow-md rounded-lg"
     >
+        <h1 className="text-2xl font-bold mb-4">Add Member Form</h1>
 
         <TextField
         label="Event Id"

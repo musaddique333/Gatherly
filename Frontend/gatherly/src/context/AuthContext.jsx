@@ -16,11 +16,16 @@ const AuthProvider = ({ children }) => {
       setUserId(storedUserId);
       setIsAuthenticated(true);
     }
+    else
+    {
+      setIsAuthenticated(false);
+    }
   }, []);
 
   const login = (token, userId) => {
     localStorage.setItem('token', token);
     localStorage.setItem('userId', userId);
+    localStorage.setItem('isAuthenticated', isAuthenticated);
     setToken(token);
     setUserId(userId);
     setIsAuthenticated(true);
@@ -29,6 +34,7 @@ const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
+    localStorage.removeItem('isAuthenticated');
     setToken(null);
     setUserId(null);
     setIsAuthenticated(false);

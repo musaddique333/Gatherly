@@ -1,4 +1,4 @@
-import React, {useContext} from "react";
+import React, {useState, useContext, useEffect} from "react";
 import EventCard from "../components/EventCard";
 import { Button } from "@mui/material";
 import { PlusCircle } from "lucide-react";
@@ -6,12 +6,12 @@ import { AuthContext } from "../context/AuthContext";
 import {useNavigate} from "react-router-dom";
 import { eventAxiosInstance } from "../axiosInstance";
 import EventCardWithoutJoin from "../components/EventCardWithoutJoin";
+import Swal from "sweetalert2";
 
 const UserDashboard = () => {
 
-  const { userId} = useContext(AuthContext);
+  const {userId} = useContext(AuthContext);
   const navigate = useNavigate();
-
 
   const [events, setEvents] = useState([]);
 
@@ -22,11 +22,14 @@ const UserDashboard = () => {
         }
       })
       .then((response) => {
-        console.log(response);
         setEvents(response.data);
       })
       .catch((error) => {
-        console.log(error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Something went wrong!',
+        })
       })
   }, []);
 

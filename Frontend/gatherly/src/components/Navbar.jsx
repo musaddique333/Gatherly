@@ -110,13 +110,13 @@ const Navbar = () => {
         </Typography>
         <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           <NavbarButton to="/">{constants.general.home}</NavbarButton>
+          <NavbarButton to = "/user/dashboard">User Dashboard</NavbarButton>
           <NavbarButton to="/video">{constants.general.Video}</NavbarButton>
-          {/* {token ? (
+          {token ? (
             <NavbarButton onClick={handleLogout}>{constants.general.logout}</NavbarButton>
           ) : (
             <NavbarButton to="/login">{constants.general.login_register}</NavbarButton>
-          )} */}
-          <NavbarButton to="/login">{constants.general.login_register}</NavbarButton>
+          )}
         </Box>
 
         <IconButton
@@ -137,12 +137,12 @@ const Navbar = () => {
         >
           <MenuItem onClick={() => { handleCloseMenu(); navigate('/'); }}>{constants.general.home}</MenuItem>
           <MenuItem onClick={() => { handleCloseMenu(); navigate('/video'); }}>{constants.general.Video}</MenuItem>
-          {/* {token ? (
+          <MenuItem onClick={() => { handleCloseMenu(); navigate('/user/dashboard'); }}>User Dashboard</MenuItem>
+          {token ? (
             <MenuItem onClick={() => { handleCloseMenu(); handleLogout(); }}>{constants.general.logout}</MenuItem>
           ) : (
             <MenuItem onClick={() => { handleCloseMenu(); navigate('/login'); }}>{constants.general.login_register}</MenuItem>
-          )} */}
-          <MenuItem onClick={() => { handleCloseMenu(); navigate('/login'); }}>{constants.general.login_register}</MenuItem>
+          )}
         </Menu>
       </Toolbar>
     </AppBar>

@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ element }) => {
-  const { isAuthenticated } = useContext(AuthContext);
+  const isAuthenticated = localStorage.getItem('isAuthenticated');
 
   return isAuthenticated ? element : <Navigate to="/login" />;
 };

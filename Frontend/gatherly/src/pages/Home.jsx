@@ -17,7 +17,6 @@ const Home = () => {
   useEffect(() => {
       eventAxiosInstance.get("/event/all")
       .then((response) => {
-        console.log(response);
         setEvents(response.data);
       })
       .catch((error) => {
