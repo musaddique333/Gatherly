@@ -91,6 +91,12 @@ const Room = () => {
       }
     };
 
+    if (localStream) {
+      localStream.getTracks().forEach((track) =>
+        pc.addTrack(track, localStream)
+      );
+    }
+
     pc.ontrack = (event) => {
       if (!existingUsers.current.has(remoteUserId)) {
         addVideoStream(event.streams[0], `remote-${remoteUserId}`);
@@ -98,11 +104,7 @@ const Room = () => {
       }
     };
 
-    if (localStream) {
-      localStream.getTracks().forEach((track) =>
-        pc.addTrack(track, localStream)
-      );
-    }
+
 
     setPeerConnections((prev) => ({ ...prev, [remoteUserId]: pc }));
     return pc;
@@ -299,6 +301,7 @@ const Room = () => {
 
   const addVideoStream = (stream, id) => {
     removeVideo(id);
+    console.log("Id is /////", id);
     const videoElement = document.createElement("video");
     videoElement.id = id;
     videoElement.autoPlay = true;
@@ -368,7 +371,7 @@ const Room = () => {
         )}
       </div>
       <div className="absolute top-4 left-4 bg-gray-800 bg-opacity-90 rounded-lg px-4 py-2">
-        {roomName}
+        {userId}
       </div>
       <div className="absolute top-4 right-4 bg-gray-800 bg-opacity-90 rounded-lg px-4 py-2 flex items-center gap-2">
         <Users className="w-5 h-5" />

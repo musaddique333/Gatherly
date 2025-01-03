@@ -1,14 +1,16 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useCallback, useContext} from "react";
 import ReminderCard from "../components/Remindercard";
 import { Button } from "@mui/material";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { eventAxiosInstance } from "../axiosInstance";
+import { AuthContext } from "../context/AuthContext";
 
 const Reminders = () => {
     
     const [reminders, setReminders] = useState([]);
     const navigate = useNavigate();
+    const {userId} = useContext(AuthContext);
 
     useEffect(() => {
         eventAxiosInstance
@@ -24,6 +26,30 @@ const Reminders = () => {
             console.log(error);
         })
     }, []);
+
+      const fetchReminders = useCallback(() => {
+    
+        if(!userId)
+        {
+          return;
+        }
+        eventAxiosInstance
+        .get("/reminder/", {
+            params: {
+                user_email: userId
+            }
+        })
+        .then ((response) => {
+            setReminders(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+      }, [userId]);
+
+      useEffect(() => {
+        fetchReminders();
+      }, [fetchReminders])
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">

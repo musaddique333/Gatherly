@@ -1,4 +1,4 @@
-import React, {useState, useContext, useEffect} from "react";
+import React, {useState, useContext, useEffect, useCallback} from "react";
 import EventCard from "../components/EventCard";
 import { Button } from "@mui/material";
 import { PlusCircle } from "lucide-react";
@@ -15,23 +15,54 @@ const UserDashboard = () => {
 
   const [events, setEvents] = useState([]);
 
-  useEffect(() => {
-      eventAxiosInstance.get("/event/", {
+  const [loading, setLoading] = useState(true);
+
+  // useEffect(() => {
+  //     eventAxiosInstance.get("/event/", {
+  //       params: {
+  //         user_email: userId
+  //       }
+  //     })
+  //     .then((response) => {
+  //       setEvents(response.data);
+  //     })
+  //     .catch((error) => {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'Oops...',
+  //         text: 'Something went wrong!',
+  //       })
+  //     })
+  // }, []);
+
+  const fetchEvents = useCallback(() => {
+
+    if(!userId)
+    {
+      return;
+    }
+
+    eventAxiosInstance
+      .get("/event/", {
         params: {
-          user_email: userId
-        }
+          user_email: userId,
+        },
       })
       .then((response) => {
         setEvents(response.data);
       })
-      .catch((error) => {
+      .catch(() => {
         Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Something went wrong!',
-        })
-      })
-  }, []);
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong!",
+        });
+      });
+  }, [userId]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
