@@ -46,11 +46,12 @@ const EventCardWithoutJoin = ({ eventdata }) => {
             }}
           >
             {eventdata.id}
-          </span>
-          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 text-sm bg-gray-700 text-white p-1 rounded transition-opacity">
-            Click to copy
+            <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 text-sm bg-gray-700 text-white p-1 rounded transition-opacity">
+              Click to copy
+            </span>
           </span>
         </p>
+
 
         <p className="text-gray-700 text-base mb-2">
           {eventdata.description || "No description provided."}

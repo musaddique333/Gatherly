@@ -10,62 +10,68 @@ import Swal from "sweetalert2";
 const Home = () => {
   const { isAuthenticated, userId } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [events, setEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [events, setEvents] = useState([]); 
 
-  // Function to determine which data to set based on authentication and userId
-  function which_data_to_set() {
-    if (!isAuthenticated) {
+  // Fetch all events for unauthenticated users
+  const fetchAllEvents = () => {
+    eventAxiosInstance
+      .get("/event/all")
+      .then((response) => {
+        const newEvents = response.data.map((event) => ({
+          ...event,
+          isMember: false,
+        }));
+        setAllEvents(newEvents);
+        setEvents(newEvents);
+      })
+      .catch((error) => {
+        console.error("Error fetching all events:", error);
+      });
+  };
 
-      eventAxiosInstance
-        .get("/event/all")
-        .then((response) => {
-          const newEvents = response.data.map((event) => ({ ...event, isMember: false }));
-          setEvents(newEvents);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    } else if (isAuthenticated) {
+  // Fetch user-specific events
+  const fetchUserEvents = () => {
+    eventAxiosInstance
+      .get("/event/", {
+        params: { user_email: userId },
+      })
+      .then((response) => {
+        const userEvents = response.data.map((userEvent) => ({
+          ...userEvent,
+          isMember: true,
+        }));
 
-      eventAxiosInstance
-        .get("/event/", {
-          params: {
-            user_email: userId,
-          },
-        })
-        .then((response) => {
-          const userEvents = response.data;
-          // Directly set the events with user-specific data
-          const updatedEvents = userEvents.map((userEvent) => {
-            return { ...userEvent, isMember: true };
-          });
-          setEvents((prevEvents) =>
-            prevEvents.map((event) => {
-              const matchedEvent = updatedEvents.find((userEvent) => userEvent.id === event.id);
-              if (matchedEvent) {
-                return matchedEvent;
-              }
-              return event;
-            })
+        // Merge user events with all events
+        const mergedEvents = allEvents.map((event) => {
+          const matchedEvent = userEvents.find(
+            (userEvent) => userEvent.id === event.id
           );
-        })
-        
-        .catch((error) => {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Something went wrong!",
-          });
+          return matchedEvent || event;
         });
-    }
-  }
 
+        setEvents(mergedEvents);
+      })
+      .catch((error) => {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong!",
+        });
+      });
+  };
 
   useEffect(() => {
-    which_data_to_set();
-  }, [isAuthenticated, userId]);
+    if (!isAuthenticated) {
+      fetchAllEvents();
+    } else {
+      if (allEvents.length === 0) {
+        fetchAllEvents();
+      }
+      fetchUserEvents();
+  }
+  });
 
-  
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
