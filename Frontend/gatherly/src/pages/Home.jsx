@@ -73,45 +73,6 @@ const Home = () => {
     }
   }, [isAuthenticated, userId]); 
 
-  // const sampleEvents = [
-  //   {
-  //     title: "React Meetup",
-  //     date: "2024-12-31T18:00:00",
-  //     description: "Learn about React and network with fellow developers!",
-  //     location: "Dublin, Ireland",
-  //     isOnline: false,
-  //     tags: ["React", "JavaScript", "Meetup"],
-  //     organizerEmail: "organizer@meetup.com",
-  //   },
-  //   {
-  //     title: "Web Development Bootcamp",
-  //     date: "2024-12-30T10:00:00",
-  //     description: "Master web development in one day!",
-  //     location: "Online",
-  //     isOnline: true,
-  //     tags: ["HTML", "CSS", "JavaScript"],
-  //     organizerEmail: "bootcamp@webdev.com",
-  //   },
-  //   {
-  //     title: "Tech Conference 2024",
-  //     date: "2024-12-28T09:00:00",
-  //     description: "Explore the latest in tech at this year's biggest conference.",
-  //     location: "San Francisco, CA",
-  //     isOnline: false,
-  //     tags: ["Tech", "Conference", "Networking"],
-  //     organizerEmail: "info@techconf.com",
-  //   },
-  //   {
-  //     title: "Web Development Bootcamp",
-  //     date: "2024-12-30T10:00:00",
-  //     description: "Master web development in one day!",
-  //     location: "Online",
-  //     isOnline: true,
-  //     tags: ["HTML", "CSS", "JavaScript"],
-  //     organizerEmail: "bootcamp@webdev.com",
-  //   },
-  // ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

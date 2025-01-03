@@ -203,3 +203,14 @@ class ReminderOut(ReminderCreate):
 
     class Config:
         from_attributes = True
+
+class EventReminderOut(BaseModel):
+    event_id: N_UUID
+    title: str
+    date: datetime
+    description: Optional[str]
+    location: Optional[str]
+    tags: Optional[List[str]] = []
+    is_online: bool
+    organizer_email: str
+    reminder_time: datetime

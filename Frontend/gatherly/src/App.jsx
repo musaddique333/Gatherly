@@ -12,9 +12,10 @@ import BetterLogin from './pages/Login';
 import EventForm from './pages/CreateEvent';
 import UserDashboard from './pages/UserDashboard';
 import AddMember from './pages/AddMember';
+import Reminders from './pages/Reminders';
+import AddReminder from './pages/AddReminder';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
-
 
 function App() {
   return(
@@ -34,6 +35,8 @@ function App() {
                 <Route path='/create-event' element={<ProtectedRoute element={<EventForm />} />} />
                 <Route path='/user/dashboard' element={<ProtectedRoute element={<UserDashboard />} />} />
                 <Route path='/user/add-member' element={<ProtectedRoute element={<AddMember />} />} />
+                <Route path ="/user/reminders" element={<ProtectedRoute element={<Reminders />} />} />
+                <Route path = "/user/reminders/add-reminder" element={<ProtectedRoute element={<AddReminder />} />} />
               </Routes>
             </div>
           </Router>

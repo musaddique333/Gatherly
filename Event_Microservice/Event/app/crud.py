@@ -401,3 +401,39 @@ def delete_reminder_entry(db: Session, reminder_id: int):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error deleting reminder: {str(e)}")
+    
+def get_reminders(db: Session, user_email: str):
+    """
+    Retrieve a list of events with reminders for a specific user.
+
+    Args:
+        db (Session): The database session.
+        user_email (str): The user's email to retrieve reminders for.
+
+    Returns:
+        List[EventReminderOut]: A list of events with reminders for the user.
+    """
+    try:
+        return (
+            db.query(Event)
+            .join(EventMember)
+            .join(Reminder)
+            .filter(EventMember.user_email == user_email)
+            .with_entities(
+                Event.id.label("event_id"),
+                Event.title,
+                Event.date,
+                Event.description,
+                Event.location,
+                Event.tags,
+                Event.is_online,
+                Event.organizer_email,
+                Reminder.reminder_time,
+            )
+            .all()
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving reminders: {str(e)}",
+        )
