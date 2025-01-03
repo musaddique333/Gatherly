@@ -19,3 +19,7 @@ set_env.sh
 
 # vscode
 .vscode
+test.py
+
+#sql
+data.sql

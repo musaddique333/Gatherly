@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nauth.proto\x12\x04\x61uth\"$\n\x13ValidateUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"(\n\x14ValidateUserResponse\x12\x10\n\x08is_valid\x18\x01 \x01(\x08\x32T\n\x0b\x41uthService\x12\x45\n\x0cValidateUser\x12\x19.auth.ValidateUserRequest\x1a\x1a.auth.ValidateUserResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nauth.proto\x12\x04\x61uth\"$\n\x13ValidateUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\":\n\x14ValidateUserResponse\x12\x10\n\x08is_valid\x18\x01 \x01(\x08\x12\x10\n\x08username\x18\x02 \x01(\t2T\n\x0b\x41uthService\x12\x45\n\x0cValidateUser\x12\x19.auth.ValidateUserRequest\x1a\x1a.auth.ValidateUserResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,7 +34,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_VALIDATEUSERREQUEST']._serialized_start=20
   _globals['_VALIDATEUSERREQUEST']._serialized_end=56
   _globals['_VALIDATEUSERRESPONSE']._serialized_start=58
-  _globals['_VALIDATEUSERRESPONSE']._serialized_end=98
-  _globals['_AUTHSERVICE']._serialized_start=100
-  _globals['_AUTHSERVICE']._serialized_end=184
+  _globals['_VALIDATEUSERRESPONSE']._serialized_end=116
+  _globals['_AUTHSERVICE']._serialized_start=118
+  _globals['_AUTHSERVICE']._serialized_end=202
 # @@protoc_insertion_point(module_scope)

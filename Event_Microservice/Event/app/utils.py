@@ -35,7 +35,12 @@ def validate_user(email: str):
             logger.warning(f"User {email} not found.")
             raise HTTPException(status_code=404, detail="User not found")
         
-        logger.info(f"User {email} validated successfully.")
+        logger.info(f"User {email} validated successfully")
+
+                # Returning additional user details
+        return {
+            "username": response.username
+        }
     
     except grpc.RpcError as e:
         logger.error(f"gRPC error while validating user {email}: {e.details()}")

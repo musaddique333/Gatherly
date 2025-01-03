@@ -1,5 +1,6 @@
 import threading
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.grpc_server import serve
 from app.api.main import api_router
@@ -8,6 +9,14 @@ from app.services.wait_for_postgres import wait_for_postgres
 
 # Initialize FastAPI app
 app = FastAPI(title="Dodgygeezers Auth")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def start_grpc_server():
     """

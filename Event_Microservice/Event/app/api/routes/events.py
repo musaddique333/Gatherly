@@ -4,7 +4,7 @@ from typing import List
 from uuid import UUID
 
 from app.models import EventOut, EventCreate, EventUpdate
-from app.crud import create_event, get_events, get_event, update_event, delete_event
+from app.crud import create_event, get_events, get_event, get_all_events, update_event, delete_event
 from app.core.db import get_db
 from app.utils import validate_user
 from app.tasks import send_event_created_email
@@ -34,17 +34,32 @@ def create_new_event(event: EventCreate, db: Session = Depends(get_db)):
     return created_event
 
 # Get all events that the user is a member of
+@router.get("/all", response_model=List[EventOut])
+def read_all_events(db: Session = Depends(get_db)):
+    """
+    Retrieves all of events in dodgygeezers.
+    
+    Arguments:
+    - user_email: The user's email to check membership
+    """
+    # try:
+    #     # Validate user's email through an authentication microservice
+    #     validate_user(user_email)
+    # except HTTPException as e:
+    #     raise e  # Raise the exception if validation fails
+    
+    return get_all_events(db=db)
+
+# Get all events that the user is a member of
 @router.get("/", response_model=List[EventOut])
-def read_events(user_email: str, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def read_events(user_email: str, db: Session = Depends(get_db)):
     """
     Retrieves a list of events where the user is a member.
     
     Arguments:
     - user_email: The user's email to check membership
-    - skip: Number of events to skip (pagination)
-    - limit: Maximum number of events to return (pagination)
     """
-    return get_events(db=db, user_email=user_email, skip=skip, limit=limit)
+    return get_events(db=db, user_email=user_email)
 
 # Get a single event by its ID (only if the user is a member)
 @router.get("/{event_id}", response_model=EventOut)

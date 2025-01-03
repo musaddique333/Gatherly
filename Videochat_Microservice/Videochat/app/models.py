@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List, Optional
 
 # Pydantic Schema for Message
 class RoomMessage(BaseModel):
@@ -27,7 +26,8 @@ class RoomSchema(BaseModel):
         messages (List[RoomMessage]): List of messages in the room.
     """
     room_id: str = Field(..., description="Unique ID for the room.")
-    messages: List[RoomMessage] = Field(..., description="List of messages in the room.")
+    messages: list[RoomMessage] = Field(..., description="List of messages in the room.")
+
 
 
 # Response model for fetching room messages
@@ -40,4 +40,4 @@ class RoomMessagesResponse(BaseModel):
         messages (List[RoomMessage]): The list of messages in the room.
     """
     room_id: str
-    messages: List[RoomMessage]
+    messages: list[RoomMessage]

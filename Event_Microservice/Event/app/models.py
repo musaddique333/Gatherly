@@ -37,7 +37,7 @@ class Event(Base):
     """
     __tablename__ = "events"
 
-    id = Column(UUID, primary_key=True, index=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid4)
     title = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)
     description = Column(Text, nullable=True)
@@ -48,7 +48,19 @@ class Event(Base):
 
     # Relationships
     reminders = relationship("Reminder", back_populates="event")
-    members = relationship("EventMember", back_populates="event")
+    members = relationship("EventMember", back_populates="event", cascade='all, delete')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "date": self.date,
+            "description": self.description,
+            "location": self.location,
+            "tags": self.tags,
+            "is_online": self.is_online,
+            "organizer_email": self.organizer_email,
+        }
 
 
 class EventMember(Base):
@@ -57,7 +69,7 @@ class EventMember(Base):
 
     Attributes:
         id (int): Primary key of the event member.
-        event_id (int): Foreign key to the Event table.
+        event_id (UUID): Foreign key to the Event table.
         user_email (str): Email of the member participating in the event.
     """
     __tablename__ = "event_members"
@@ -79,7 +91,7 @@ class Reminder(Base):
 
     Attributes:
         id (int): Primary key of the reminder.
-        event_id (int): Foreign key to the Event table.
+        event_id (UUID): Foreign key to the Event table.
         user_email (str): Email of the user to receive the reminder.
         reminder_time (datetime): Time of the reminder.
     """
@@ -108,6 +120,7 @@ class EventBase(BaseModel):
         location (Optional[str]): Physical or virtual location of the event.
         tags (Optional[List[str]]): List of tags for the event.
         is_online (bool): Indicates if the event is online.
+        organiser_email (str): Indicates organisers email
     """
     title: str
     date: datetime
@@ -115,6 +128,7 @@ class EventBase(BaseModel):
     location: Optional[str]
     tags: Optional[List[str]] = []
     is_online: bool
+    organizer_email: str
 
 
 class EventCreate(EventBase):
@@ -140,6 +154,7 @@ class EventOut(EventBase):
         id (UUID): Unique identifier of the event.
     """
     id: N_UUID
+    username: str
 
     class Config:
         from_attributes = True
@@ -201,3 +216,15 @@ class ReminderOut(ReminderCreate):
 
     class Config:
         from_attributes = True
+
+class EventReminderOut(BaseModel):
+    event_id: N_UUID
+    title: str
+    date: datetime
+    description: Optional[str]
+    location: Optional[str]
+    tags: Optional[List[str]] = []
+    is_online: bool
+    organizer_email: str
+    reminder_time: datetime
+    reminder_id: int
