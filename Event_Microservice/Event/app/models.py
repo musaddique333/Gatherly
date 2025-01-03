@@ -48,7 +48,19 @@ class Event(Base):
 
     # Relationships
     reminders = relationship("Reminder", back_populates="event")
-    members = relationship("EventMember", back_populates="event")
+    members = relationship("EventMember", back_populates="event", cascade='all, delete')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "date": self.date,
+            "description": self.description,
+            "location": self.location,
+            "tags": self.tags,
+            "is_online": self.is_online,
+            "organizer_email": self.organizer_email,
+        }
 
 
 class EventMember(Base):
@@ -142,6 +154,7 @@ class EventOut(EventBase):
         id (UUID): Unique identifier of the event.
     """
     id: N_UUID
+    username: str
 
     class Config:
         from_attributes = True
@@ -214,3 +227,4 @@ class EventReminderOut(BaseModel):
     is_online: bool
     organizer_email: str
     reminder_time: datetime
+    reminder_id: int

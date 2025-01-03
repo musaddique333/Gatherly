@@ -2,35 +2,58 @@ import React, {useState} from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import {eventAxiosInstance} from "../axiosInstance";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
+
 
 const AddReminder = () => {
-    const [eventId, setEventId] = useState("");
-    const [reminderTime, setReminderTime] = useState("");
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+    event_id: "",
+    reminder_time: "",
+    user_email: localStorage.getItem("userId"),
+    });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({
+          ...formData,
+          [name]: value,
+        });
+      };
 
     const handleSubmit = (e)=>{
         e.preventDefault();
-        const formattedDate = new Date(reminderTime).toISOString();
-        console.log("event" + eventId);
-        console.log("reminder" + reminderTime);
-        console.log("Formatted" + formattedDate);
-        console.log(localStorage.getItem("userId"));
-        eventAxiosInstance.post("/reminder/", {
-            params:{
-                event_id:eventId,
-                user_email: localStorage.getItem("userId"),
-                reminder_time: formattedDate
-            }
+        const formattedDate = new Date(formData.reminder_time).toISOString();
+
+        const reminderData = {
+            ...formData,
+            date: formattedDate,
+        };
+
+        eventAxiosInstance
+        .post("/reminder/", reminderData)
+        .then((response) => {
+            // Show success message with SweetAlert
+            Swal.fire({
+            icon: "success",
+            title: "Reminder Created Successfully",
+            text: "Your reminder has been successfully created and added.",
+            })
+            .then(() => {
+                navigate("/user/reminders");
+            });
         })
-    }
+        .catch((error) => {
+        // Show error message with SweetAlert
+        Swal.fire({
+            icon: "error",
+            title: "reminder Creation Failed",
+            text: error.response?.data?.message || "Something went wrong.",
+        });
+        });
+    };
 
-    const handleEventIdChange = (e) => {
-        setEventId(e.target.value);
-    }
-
-    const handleReminderTimeChange = (e) => {
-        setReminderTime(e.target.value);
-    }
 
     return (
     <form
@@ -41,19 +64,19 @@ const AddReminder = () => {
 
         <TextField
         label="Event Id"
-        name="Event Id"
-        value={eventId}
-        onChange={handleEventIdChange}
+        name="event_id"
+        value={formData.event_id}
+        onChange={handleChange}
         required
         fullWidth
         />
 
         <TextField
         label="Reminder Time"
-        name="Reminder Time"
+        name="reminder_time"
         type="datetime-local"
-        value={reminderTime}
-        onChange={handleReminderTimeChange}
+        value={formData.reminder_time}
+        onChange={handleChange}
         required
         InputLabelProps={{ shrink: true }}
         fullWidth
@@ -64,7 +87,6 @@ const AddReminder = () => {
         variant="contained"
         color="primary"
         className="mt-4"
-        onClick={handleSubmit}
         >
             Add Reminder
         </Button>

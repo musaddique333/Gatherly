@@ -42,7 +42,10 @@ class AuthService(auth_pb2_grpc.AuthServiceServicer):
                     logger.warning(f"User {email} not found or not verified.")
                     return auth_pb2.ValidateUserResponse(is_valid=False)
 
-                return auth_pb2.ValidateUserResponse(is_valid=True)
+                return auth_pb2.ValidateUserResponse(
+                    is_valid=True,
+                    username=user.username or "",
+                )
 
         except Exception as e:
             # Log the error and set the context details and status code

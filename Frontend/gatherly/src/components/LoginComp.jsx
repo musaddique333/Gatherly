@@ -36,7 +36,11 @@ const Login = () => {
               title: 'Login Successful',
               text: 'Welcome to Gatherly!',
             })
-            navigate('/');
+            // Wait for 1 second before navigating
+            setTimeout(() => {
+              navigate('/');
+              window.location.reload();
+            }, 1000); 
           }
         })
         .catch(error => {

@@ -4,20 +4,22 @@ import { Button } from "@mui/material";
 import { Event } from "@mui/icons-material";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import DeleteEvent from "./DeleteEvent";
+import Swal from 'sweetalert2';
 
-const EventCardWithoutJoin = ({eventdata}) => {
+const EventCardWithoutJoin = ({ eventdata }) => {
   const formatDate = (dateString) => new Date(dateString).toLocaleString();
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate("/user/add-member", { state: { eventdata} });
+    navigate("/user/add-member", { state: { eventdata } });
   };
 
-  const {userId} = useContext(AuthContext);
+  const { userId } = useContext(AuthContext);
 
   return (
     <div className="max-w-sm rounded overflow-hidden shadow-lg bg-white m-4">
-      <div className="px-6 py-4">
+      <div className="px-4 py-4">
         <div className="flex items-center mb-2">
           {/* Optional Icon */}
           <Event className="text-blue-500 mr-2" />
@@ -28,8 +30,28 @@ const EventCardWithoutJoin = ({eventdata}) => {
         </p>
 
         <p className="text-gray-600 text-sm mb-2">
-          Room Id: {eventdata.id}
+          <span>Room Id: </span>
+          <span
+            className="cursor-pointer hover:text-red-600 relative group bg-red-100 hover:bg-red-200 p-1 rounded"
+            style={{ whiteSpace: 'nowrap' }}
+            onClick={() => {
+              navigator.clipboard.writeText(eventdata.id).then(() => {
+                Swal.fire({
+                  icon: "success",
+                  title: "Copied to clipboard",
+                  showConfirmButton: false,
+                  timer: 1500
+                });
+              });
+            }}
+          >
+            {eventdata.id}
+          </span>
+          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 text-sm bg-gray-700 text-white p-1 rounded transition-opacity">
+            Click to copy
+          </span>
         </p>
+
         <p className="text-gray-700 text-base mb-2">
           {eventdata.description || "No description provided."}
         </p>
@@ -48,19 +70,20 @@ const EventCardWithoutJoin = ({eventdata}) => {
             ))}
           </div>
         )}
-        <p className="text-gray-500 text-xs">Organizer: {eventdata.organizer_email}</p>
+        <p className="text-gray-500 text-xs">Organizer: {eventdata.username}</p>
       </div>
 
       {userId === eventdata.organizer_email && (
-        <div className="px-4 py-2">
+        <div className="px-4 py-2 flex justify-between">
           <Button
             variant="contained"
             color="primary"
-            fullWidth
+            style={{ flex: '0 0 80%' }}
             onClick={handleClick}
           >
             Add member
           </Button>
+          <DeleteEvent id={eventdata.id} user_email={eventdata.organizer_email} />
         </div>
       )}
     </div>

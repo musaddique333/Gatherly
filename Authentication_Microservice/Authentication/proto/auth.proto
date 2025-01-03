@@ -12,4 +12,5 @@ message ValidateUserRequest {
 
 message ValidateUserResponse {
   bool is_valid = 1;
+  string username = 2;
 }

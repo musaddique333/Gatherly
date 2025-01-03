@@ -2,8 +2,17 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
 from datetime import datetime, timezone
+from app.utils import validate_user
 
 from app.models import EventMember, Event, EventCreate, EventUpdate, Reminder, ReminderCreate, EventOut
+
+# fet user name from grpc
+def get_username(email: str):
+    try:
+        # Validate organizer's email through an authentication microservice
+        return validate_user(email)["username"]
+    except HTTPException as e:
+        raise e  # Raise the exception if validation fails
 
 # Create a new event
 def create_event(db: Session, event: EventCreate):
@@ -39,7 +48,9 @@ def create_event(db: Session, event: EventCreate):
         db.add(event_member)
         db.commit()
 
-        return db_event
+        username = get_username(db_event.organizer_email)
+        event_out = EventOut(**db_event.to_dict(), username=username)
+        return event_out
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error creating event: {str(e)}")
@@ -55,7 +66,19 @@ def get_all_events(db: Session):
         List[Event]: List of all events currently active.
     """
     try:
-        return db.query(Event).all()
+        events = db.query(Event).all()
+        event_list_with_username = []
+
+        for event in events:
+            username = get_username(event.organizer_email) 
+            # Create a new EventOutWithUsername object
+            event_with_username = EventOut(
+                **event.to_dict(),
+                username=username
+            )
+            event_list_with_username.append(event_with_username)
+
+        return event_list_with_username
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving events: {str(e)}")
 
@@ -72,7 +95,19 @@ def get_events(db: Session, user_email: str):
         List[Event]: List of events the user is a member of.
     """
     try:
-        return db.query(Event).join(EventMember).filter(EventMember.user_email == user_email).all()
+        events = db.query(Event).join(EventMember).filter(EventMember.user_email == user_email).all()
+        event_list_with_username = []
+
+        for event in events:
+            username = get_username(event.organizer_email) 
+            # Create a new EventOutWithUsername object
+            event_with_username = EventOut(
+                **event.to_dict(),
+                username=username
+            )
+            event_list_with_username.append(event_with_username)
+
+        return event_list_with_username
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving events: {str(e)}")
 
@@ -87,7 +122,7 @@ def get_event(db: Session, event_id: UUID, user_email: str):
         user_email (str): The user's email to verify membership.
 
     Returns:
-        dict: A dictionary containing the message and event data (or empty event if not a member).
+        dict: A dictionary containing event data (or empty event if not a member).
     """
     db_event = db.query(Event).filter(Event.id == event_id).first()
     if not db_event:
@@ -114,11 +149,14 @@ def get_event(db: Session, event_id: UUID, user_email: str):
             tags=[], 
             is_online=False, 
             id="ebb1543d-21c2-4ddb-af81-dcea218c8213",
-            organizer_email=user_email
+            organizer_email=user_email,
+            username=""
         )
         return empty_event
     
-    return db_event
+    username = get_username(db_event.organizer_email)
+    event_out = EventOut(**db_event.to_dict(), username=username)
+    return event_out
 
 
 # Update an event (only if the user is the organizer)
@@ -157,7 +195,9 @@ def update_event(db: Session, event_id: UUID, event: EventUpdate, user_email: st
         setattr(db_event, key, value)
     db.commit()
     db.refresh(db_event)
-    return db_event
+    username = get_username(db_event.organizer_email)
+    event_out = EventOut(**db_event.to_dict(), username=username)
+    return event_out
 
 # Delete an event (only if the user is the organizer)
 def delete_event(db: Session, event_id: UUID, user_email: str):
@@ -188,14 +228,15 @@ def delete_event(db: Session, event_id: UUID, user_email: str):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the organizer can delete this event"
         )
-
+    username = get_username(db_event.organizer_email)
+    event_out = EventOut(**db_event.to_dict(), username=username)
     try:
         # Delete all associated event members
         db.query(EventMember).filter(EventMember.event_id == event_id).delete()
 
         db.delete(db_event)
         db.commit()
-        return db_event
+        return event_out
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error deleting event: {str(e)}")
@@ -395,7 +436,7 @@ def delete_reminder_entry(db: Session, reminder_id: int):
         if reminder:
             db.delete(reminder)
             db.commit()
-            return True
+            return reminder
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reminder not found")
     except Exception as e:
@@ -429,6 +470,7 @@ def get_reminders(db: Session, user_email: str):
                 Event.is_online,
                 Event.organizer_email,
                 Reminder.reminder_time,
+                Reminder.id.label("reminder_id")
             )
             .all()
         )
