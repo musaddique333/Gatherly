@@ -44,7 +44,7 @@ async def signaling_endpoint(websocket: WebSocket, room_id: str, user_id: str):
         while True:
             # Receive messages from the WebSocket and broadcast them
             data = await websocket.receive_text()
-            await manager.broadcast(room_id, user_id, data)
+            await manager.broadcast(room_id, user_id, data, websocket)
     except WebSocketDisconnect:
         # Handle disconnection of the user
         logger.info(f"User {user_id} disconnected from Room {room_id}")

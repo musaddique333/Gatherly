@@ -48,8 +48,6 @@ class ConnectionManager:
             self.rooms[room_id][user_id] = []
         self.rooms[room_id][user_id].append(websocket)
 
-        # Send all previous messages to the new user when they join the room
-        await self.send_previous_messages(room_id, websocket)
 
     async def disconnect(self, room_id: str, user_id: str, websocket: WebSocket):
         """
@@ -76,7 +74,7 @@ class ConnectionManager:
         # Save this disconnect event to MongoDB as well
         await self.broadcast_disconnect_message(room_id, user_id)
 
-    async def broadcast(self, room_id: str, user_id: str, message: str):
+    async def broadcast(self, room_id: str, user_id: str, message: str, websocket: WebSocket):
         """
         Broadcasts a message to all users in a room.
 
@@ -92,13 +90,23 @@ class ConnectionManager:
             # Add this message to MongoDB with room_id and user_id
             message_data = json.loads(message)
 
+            logger.info(f"Broadcasting message: {message_data}")
             # Save the message to MongoDB
-            await insert_message(room_id, user_id, message_data["message"])
 
+            if message_data["message"] == "user connected":
+                # Send all previous messages to the new user when they join the room
+                await self.send_previous_messages(room_id, websocket)
+            else:
+                await insert_message(room_id, user_id, message_data["message"])
+
+            logger.info("Inserted message to MongoDB")
             # Broadcast this message to all connected users
             if room_id in self.rooms:
+                logger.info(f"Broadcasting message to room {room_id}")
                 for user_id, connections in list(self.rooms[room_id].items()):
+                    logger.info(f"Broadcasting message to user {user_id}")
                     for connection in connections:
+                        logger.info(f"Sending message to user {user_id} in for connection {connection}")
                         try:
                             # Build the full message structure before sending
                             broadcast_message = {
@@ -109,6 +117,8 @@ class ConnectionManager:
                             
                             # Send the complete message as JSON to the WebSocket
                             await connection.send_text(json.dumps(broadcast_message))
+
+                            logger.info(f"Sent message to user {user_id}: {broadcast_message}")
                         except Exception as e:
                             logger.error(f"Error sending message to user {user_id}: {e}")
                             self.disconnect(room_id, user_id, connection)
@@ -133,10 +143,13 @@ class ConnectionManager:
             # Send each message to the user
             for msg in room_messages.messages:
                 message = {
+                    "type": "chat-history",
                     "user_id": msg.user_id,
                     "message": msg.message,
                     "timestamp": msg.timestamp.isoformat()
                 }
+
+                logger.info(f"Sending message: {message}")
                 await websocket.send_text(json.dumps(message))  # Send the message as JSON
 
     async def broadcast_disconnect_message(self, room_id: str, user_id: str):
@@ -157,9 +170,6 @@ class ConnectionManager:
             "message": f"User {user_id} has disconnected.",
             "timestamp": datetime.now(timezone.utc)
         }
-        
-        # Save disconnect message to MongoDB
-        await insert_message(room_id, user_id, disconnect_message["message"])
 
         # Broadcast the disconnect message to remaining users
         message = json.dumps({

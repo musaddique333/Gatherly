@@ -1,38 +1,33 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { 
-  Mic, MicOff, Video, VideoOff,   Share,   Phone, 
-  MessageSquare, 
-  Users
-} from 'lucide-react';
+  Mic, MicOff, Video, VideoOff, Share, Phone, 
+  MessageSquare, Users 
+} from "lucide-react";
 
 import ChatBox from "../components/chats";
-import { AuthContext } from "../context/AuthContext";
-import { use } from "react";
 
 const Room = () => {
-  const {roomName} = useParams();
-  // const {userId} = useContext(AuthContext);
-  const userId = localStorage.getItem('userId');
+  const { roomName } = useParams();
+  const userId = localStorage.getItem("userId");
 
-  console.log("Ye  hai madachod ", userId);
   const [peerConnections, setPeerConnections] = useState({});
   const [localStream, setLocalStream] = useState(null);
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput] = useState('');
+  const [chatInput, setChatInput] = useState("");
   const [showChat, setShowChat] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
-  
+
   const wsRef = useRef(null);
   const existingUsers = useRef(new Set());
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
 
   const configuration = {
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
   };
 
   useEffect(() => {
@@ -43,7 +38,7 @@ const Room = () => {
   const connectWebSocket = () => {
     const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const signalingServer = `${wsProtocol}//localhost:8002/ws/${roomName}/${userId}`;
-    
+
     wsRef.current = new WebSocket(signalingServer);
 
     wsRef.current.onopen = () => {
@@ -55,8 +50,10 @@ const Room = () => {
     wsRef.current.onclose = () => {
       console.log("WebSocket connection closed.");
       if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-        console.log(`Attempting to reconnect in ${delay * 1000} seconds...`);
+        const delay = Math.min(
+          1000 * Math.pow(2, reconnectAttemptsRef.current),
+          30000
+        );
         setTimeout(connectWebSocket, delay);
         reconnectAttemptsRef.current++;
       } else {
@@ -71,10 +68,10 @@ const Room = () => {
   };
 
   const cleanup = () => {
-    Object.values(peerConnections).forEach(pc => pc.close());
+    Object.values(peerConnections).forEach((pc) => pc.close());
     if (wsRef.current) wsRef.current.close();
     if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+      localStream.getTracks().forEach((track) => track.stop());
     }
   };
 
@@ -83,12 +80,14 @@ const Room = () => {
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        wsRef.current?.send(JSON.stringify({
-          type: "ice-candidate",
-          from: userId,
-          to: remoteUserId,
-          candidate: event.candidate
-        }));
+        wsRef.current?.send(
+          JSON.stringify({
+            type: "ice-candidate",
+            from: userId,
+            to: remoteUserId,
+            candidate: event.candidate,
+          })
+        );
       }
     };
 
@@ -100,17 +99,22 @@ const Room = () => {
     };
 
     if (localStream) {
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      localStream.getTracks().forEach((track) =>
+        pc.addTrack(track, localStream)
+      );
     }
 
-    setPeerConnections(prev => ({ ...prev, [remoteUserId]: pc }));
+    setPeerConnections((prev) => ({ ...prev, [remoteUserId]: pc }));
     return pc;
   };
 
   const startCall = async () => {
     try {
       if (!localStream) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
         setLocalStream(stream);
         const localVideo = document.getElementById("localVideo");
         if (localVideo) localVideo.srcObject = stream;
@@ -118,9 +122,17 @@ const Room = () => {
 
       wsRef.current.onmessage = async (message) => {
         const data = JSON.parse(message.data);
-        const { type, from, offer, answer, candidate, message: chatMessage, messages, timestamp } = data;
 
-        if (from === userId) return;
+        const {
+          type,
+          from,
+          offer,
+          answer,
+          candidate,
+          message: chatMessage,
+          messages,
+          timestamp,
+        } = data;
 
         switch (type) {
           case "offer":
@@ -129,28 +141,39 @@ const Room = () => {
               await pc.setRemoteDescription(new RTCSessionDescription(offer));
               const answer = await pc.createAnswer();
               await pc.setLocalDescription(answer);
-              wsRef.current?.send(JSON.stringify({ type: "answer", from: userId, to: from, answer }));
+              wsRef.current?.send(
+                JSON.stringify({ type: "answer", from: userId, to: from, answer })
+              );
             }
             break;
 
           case "answer":
             if (peerConnections[from]) {
-              await peerConnections[from].setRemoteDescription(new RTCSessionDescription(answer));
+              await peerConnections[from].setRemoteDescription(
+                new RTCSessionDescription(answer)
+              );
             }
             break;
 
           case "ice-candidate":
             if (peerConnections[from]) {
-              await peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate));
+              await peerConnections[from].addIceCandidate(
+                new RTCIceCandidate(candidate)
+              );
             }
             break;
 
-          case "message":
-            setChatMessages(prev => [...prev, { from, message: chatMessage, timestamp }]);
-            break;
-
           case "chat-history":
-            setChatMessages(messages);
+            console.log("Received message:", data);
+            // Here we are handling the "chat-history" message
+            const modifiedData = {
+              ...data,
+              from: data.user_id,
+            };
+          
+            delete modifiedData.user_id;
+          
+            setChatMessages((event) => [...event, modifiedData]);
             break;
 
           case "new-user":
@@ -158,7 +181,14 @@ const Room = () => {
               const pc = await createPeerConnection(from);
               const offer = await pc.createOffer();
               await pc.setLocalDescription(offer);
-              wsRef.current?.send(JSON.stringify({ type: "offer", from: userId, to: from, offer }));
+              wsRef.current?.send(
+                JSON.stringify({
+                  type: "offer",
+                  from: userId,
+                  to: from,
+                  offer,
+                })
+              );
             }
             break;
 
@@ -166,7 +196,7 @@ const Room = () => {
             removeVideo(`remote-${from}`);
             if (peerConnections[from]) {
               peerConnections[from].close();
-              setPeerConnections(prev => {
+              setPeerConnections((prev) => {
                 const newConnections = { ...prev };
                 delete newConnections[from];
                 return newConnections;
@@ -177,7 +207,9 @@ const Room = () => {
         }
       };
 
-      wsRef.current?.send(JSON.stringify({ type: "new-user", from: userId, message: userId + " has joined" }));
+      wsRef.current?.send(
+        JSON.stringify({ type: "new-user", from: userId, message: "user connected" })
+      );
     } catch (error) {
       console.error("Error in startCall:", error);
     }
@@ -185,7 +217,7 @@ const Room = () => {
 
   const toggleAudio = () => {
     if (localStream) {
-      localStream.getAudioTracks().forEach(track => {
+      localStream.getAudioTracks().forEach((track) => {
         track.enabled = audioMuted;
       });
       setAudioMuted(!audioMuted);
@@ -194,7 +226,7 @@ const Room = () => {
 
   const toggleVideo = () => {
     if (localStream) {
-      localStream.getVideoTracks().forEach(track => {
+      localStream.getVideoTracks().forEach((track) => {
         track.enabled = videoMuted;
       });
       setVideoMuted(!videoMuted);
@@ -203,11 +235,13 @@ const Room = () => {
 
   const startScreenSharing = async () => {
     try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
       const screenTrack = screenStream.getVideoTracks()[0];
-      
-      Object.values(peerConnections).forEach(pc => {
-        const sender = pc.getSenders().find(s => s.track?.kind === "video");
+
+      Object.values(peerConnections).forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (sender) {
           sender.replaceTrack(screenTrack);
         }
@@ -215,7 +249,7 @@ const Room = () => {
 
       const localVideo = document.getElementById("localVideo");
       if (localVideo) localVideo.srcObject = screenStream;
-      
+
       screenTrack.onended = stopScreenSharing;
       setIsScreenSharing(true);
     } catch (error) {
@@ -226,8 +260,8 @@ const Room = () => {
   const stopScreenSharing = () => {
     if (localStream) {
       const videoTrack = localStream.getVideoTracks()[0];
-      Object.values(peerConnections).forEach(pc => {
-        const sender = pc.getSenders().find(s => s.track?.kind === "video");
+      Object.values(peerConnections).forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (sender) {
           sender.replaceTrack(videoTrack);
         }
@@ -245,17 +279,20 @@ const Room = () => {
         type: "message",
         from: userId,
         message: chatInput.trim(),
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString(),
       };
+
       setChatMessages((prev) => [...prev, messageData]);
+
       setChatInput("");
-      wsRef.current.send(JSON.stringify(messageData));     
+      wsRef.current.send(JSON.stringify(messageData));
     }
   };
 
-
   const endCall = () => {
-    wsRef.current?.send(JSON.stringify({ type: "user-disconnected", from: userId }));
+    wsRef.current?.send(
+      JSON.stringify({ type: "user-disconnected", from: userId })
+    );
     cleanup();
     window.location.href = "/";
   };
@@ -268,18 +305,20 @@ const Room = () => {
     videoElement.playsInline = true;
     videoElement.srcObject = stream;
     videoElement.className = "w-full h-full object-cover";
-    
+
     const videoContainer = document.createElement("div");
-    videoContainer.className = "relative aspect-video bg-gray-800 rounded-lg overflow-hidden";
+    videoContainer.className =
+      "relative aspect-video bg-gray-800 rounded-lg overflow-hidden";
     videoContainer.appendChild(videoElement);
-    
+
     const labelContainer = document.createElement("div");
-    labelContainer.className = "absolute bottom-4 left-4 bg-black bg-opacity-50 px-2 py-1 rounded-md text-white";
-    labelContainer.textContent = id === 'localVideo' ? 'You' : 'Participant';
+    labelContainer.className =
+      "absolute bottom-4 left-4 bg-black bg-opacity-50 px-2 py-1 rounded-md text-white";
+    labelContainer.textContent = id === "localVideo" ? "You" : "Participant";
     videoContainer.appendChild(labelContainer);
-    
+
     document.getElementById("videos")?.appendChild(videoContainer);
-    setParticipantCount(prev => prev + 1);
+    setParticipantCount((prev) => prev + 1);
   };
 
   const removeVideo = (id) => {
@@ -294,7 +333,10 @@ const Room = () => {
     <div className="h-screen bg-gray-900 text-white relative overflow-hidden">
       <div className="h-full flex">
         <div className="flex-1 p-4">
-          <div id="videos" className="grid gap-4 h-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div
+            id="videos"
+            className="grid gap-4 h-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          >
             <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
               <video
                 id="localVideo"
@@ -330,14 +372,14 @@ const Room = () => {
       </div>
       <div className="absolute top-4 right-4 bg-gray-800 bg-opacity-90 rounded-lg px-4 py-2 flex items-center gap-2">
         <Users className="w-5 h-5" />
-        {existingUsers.current.size + 1}
+        {participantCount}
       </div>
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 transition-opacity duration-300 opacity-100">
         <div className="bg-gray-800 rounded-full px-6 py-3 flex items-center gap-6">
           <button
             onClick={toggleAudio}
             className={`p-3 rounded-full hover:bg-gray-700 ${
-              audioMuted ? 'bg-red-500 hover:bg-red-600' : ''
+              audioMuted ? "bg-red-500 hover:bg-red-600" : ""
             }`}
             title={audioMuted ? "Unmute" : "Mute"}
           >
@@ -346,16 +388,16 @@ const Room = () => {
           <button
             onClick={toggleVideo}
             className={`p-3 rounded-full hover:bg-gray-700 ${
-              videoMuted ? 'bg-red-500 hover:bg-red-600' : ''
+              videoMuted ? "bg-red-500 hover:bg-red-600" : ""
             }`}
             title={videoMuted ? "Turn on camera" : "Turn off camera"}
           >
-            {videoMuted ? <VideoOff /> : <Video/>}
+            {videoMuted ? <VideoOff /> : <Video />}
           </button>
           <button
             onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
             className={`p-3 rounded-full hover:bg-gray-700 ${
-              isScreenSharing ? 'bg-blue-500 hover:bg-blue-600' : ''
+              isScreenSharing ? "bg-blue-500 hover:bg-blue-600" : ""
             }`}
             title={isScreenSharing ? "Stop sharing" : "Share screen"}
           >
@@ -364,7 +406,7 @@ const Room = () => {
           <button
             onClick={() => setShowChat(!showChat)}
             className={`p-3 rounded-full hover:bg-gray-700 ${
-              showChat ? 'bg-blue-500 hover:bg-blue-600' : ''
+              showChat ? "bg-blue-500 hover:bg-blue-600" : ""
             }`}
             title="Toggle chat"
           >
