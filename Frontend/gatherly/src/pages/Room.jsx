@@ -25,6 +25,7 @@ const Room = () => {
   const existingUsers = useRef(new Set());
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
+  const localStreamRef = useRef(null);
 
   const configuration = {
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -42,7 +43,6 @@ const Room = () => {
     wsRef.current = new WebSocket(signalingServer);
 
     wsRef.current.onopen = () => {
-      console.log("Connected to signaling server");
       reconnectAttemptsRef.current = 0;
       startCall();
     };
@@ -75,98 +75,91 @@ const Room = () => {
     }
   };
 
-  const createPeerConnection = async (remoteUserId) => {
-    const pc = new RTCPeerConnection(configuration);
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        wsRef.current?.send(
-          JSON.stringify({
-            type: "ice-candidate",
-            from: userId,
-            to: remoteUserId,
-            candidate: event.candidate,
-          })
-        );
+  const initializeLocalStream = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      localStreamRef.current = stream;  // Set the ref immediately
+      setLocalStream(stream);  // Also update the state for reactivity
+      
+      const localVideo = document.getElementById("localVideo");
+      if (localVideo) {
+        localVideo.srcObject = stream;
       }
-    };
-
-    if (localStream) {
-      localStream.getTracks().forEach((track) =>
-        pc.addTrack(track, localStream)
-      );
+      return stream;
+    } catch (error) {
+      console.error("Error getting local stream:", error);
+      return null;
     }
-
-    pc.ontrack = (event) => {
-      if (!existingUsers.current.has(remoteUserId)) {
-        addVideoStream(event.streams[0], `remote-${remoteUserId}`);
-        existingUsers.current.add(remoteUserId);
-      }
-    };
-
-
-
-    setPeerConnections((prev) => ({ ...prev, [remoteUserId]: pc }));
-    return pc;
   };
 
   const startCall = async () => {
     try {
-      if (!localStream) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        setLocalStream(stream);
-        const localVideo = document.getElementById("localVideo");
-        if (localVideo) localVideo.srcObject = stream;
+      if (!localStreamRef.current) {
+        const stream = await initializeLocalStream();
+        if (!stream) {
+            console.error("Failed to initialize local stream.");
+            return;
+        }
       }
 
       wsRef.current.onmessage = async (message) => {
-        const data = JSON.parse(message.data);
+        // const data = JSON.parse(message.data);
 
-        const {
-          type,
-          from,
-          offer,
-          answer,
-          candidate,
-          message: chatMessage,
-          messages,
-          timestamp,
-        } = data;
+        let data;
 
-        switch (type) {
+        try{
+          data = JSON.parse(message.data);
+        }
+        catch{
+          console.log(message.data);
+          return;
+        }
+
+        // const {
+        //   type,
+        //   from,
+        //   to,
+        //   offer,
+        //   answer,
+        //   candidate,
+        //   message: chatMessage,
+        //   messages,
+        //   timestamp,
+        // } = data;
+
+        switch (data.type) {
           case "offer":
-            if (!peerConnections[from]) {
-              const pc = await createPeerConnection(from);
-              await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            if (!peerConnections[data.user_id]) {
+              const pc = await createPeerConnection(data.user_id);
+              await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
               const answer = await pc.createAnswer();
               await pc.setLocalDescription(answer);
               wsRef.current?.send(
-                JSON.stringify({ type: "answer", from: userId, to: from, answer })
+                JSON.stringify({ type: "answer", from: userId, to: data.user_id, answer })
               );
             }
             break;
 
-          case "answer":
-            if (peerConnections[from]) {
-              await peerConnections[from].setRemoteDescription(
-                new RTCSessionDescription(answer)
-              );
-            }
-            break;
+            case "answer":
+              if (peerConnections[data.user_id]) {
+                await peerConnections[data.user_id].setRemoteDescription(
+                  new RTCSessionDescription(data.answer)
+                );
+              }
+              break;
 
           case "ice-candidate":
-            if (peerConnections[from]) {
-              await peerConnections[from].addIceCandidate(
+            if (peerConnections[data.user_id]) {
+              await peerConnections[data.user_id].addIceCandidate(
                 new RTCIceCandidate(candidate)
               );
             }
             break;
 
           case "chat-history":
-            console.log("Received message:", data);
             // Here we are handling the "chat-history" message
             const modifiedData = {
               ...data,
@@ -179,15 +172,16 @@ const Room = () => {
             break;
 
           case "new-user":
-            if (!peerConnections[from]) {
-              const pc = await createPeerConnection(from);
+            if (!peerConnections[data.user_id]) {
+              const pc = await createPeerConnection(data.user_id);
               const offer = await pc.createOffer();
+
               await pc.setLocalDescription(offer);
               wsRef.current?.send(
                 JSON.stringify({
                   type: "offer",
                   from: userId,
-                  to: from,
+                  to: data.user_id,
                   offer,
                 })
               );
@@ -206,6 +200,8 @@ const Room = () => {
             }
             existingUsers.current.delete(from);
             break;
+          default:
+              console.log("Unhandled message type:", data.type);
         }
       };
 
@@ -215,6 +211,49 @@ const Room = () => {
     } catch (error) {
       console.error("Error in startCall:", error);
     }
+  };
+
+
+  const createPeerConnection = async (remoteUserId) => {
+    if (!localStreamRef.current) {
+      console.error("Local stream not available yet");
+      return null;
+    }
+    const pc = new RTCPeerConnection(configuration);
+    peerConnections[remoteUserId] = pc;
+
+    pc.addTransceiver('audio', { direction: 'sendrecv' });
+pc.addTransceiver('video', { direction: 'sendrecv' });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        wsRef.current?.send(
+          JSON.stringify({
+            type: "ice-candidate",
+            from: userId,
+            to: remoteUserId,
+            candidate: event.candidate,
+          })
+        );
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE Connection State:', pc.iceConnectionState);
+  };
+
+    pc.ontrack = (event) => {
+      addVideoStream(event.streams[0], `remote-${remoteUserId}`);
+      existingUsers.current.add(remoteUserId);
+    };
+
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) =>
+        pc.addTrack(track, localStreamRef.current)
+      );
+    }
+    setPeerConnections((prev) => ({ ...prev, [remoteUserId]: pc }));
+    return pc;
   };
 
   const toggleAudio = () => {
@@ -232,46 +271,6 @@ const Room = () => {
         track.enabled = videoMuted;
       });
       setVideoMuted(!videoMuted);
-    }
-  };
-
-  const startScreenSharing = async () => {
-    try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
-      const screenTrack = screenStream.getVideoTracks()[0];
-
-      Object.values(peerConnections).forEach((pc) => {
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-        if (sender) {
-          sender.replaceTrack(screenTrack);
-        }
-      });
-
-      const localVideo = document.getElementById("localVideo");
-      if (localVideo) localVideo.srcObject = screenStream;
-
-      screenTrack.onended = stopScreenSharing;
-      setIsScreenSharing(true);
-    } catch (error) {
-      console.error("Error sharing screen:", error);
-    }
-  };
-
-  const stopScreenSharing = () => {
-    if (localStream) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      Object.values(peerConnections).forEach((pc) => {
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-        if (sender) {
-          sender.replaceTrack(videoTrack);
-        }
-      });
-
-      const localVideo = document.getElementById("localVideo");
-      if (localVideo) localVideo.srcObject = localStream;
-      setIsScreenSharing(false);
     }
   };
 
@@ -299,30 +298,41 @@ const Room = () => {
     window.location.href = "/";
   };
 
-  const addVideoStream = (stream, id) => {
-    removeVideo(id);
-    console.log("Id is /////", id);
+  // const addVideoStream = (stream, id) => {
+  //   removeVideo(id);
+  //   console.log("Id is /////", id);
+  //   const videoElement = document.createElement("video");
+  //   videoElement.id = id;
+  //   videoElement.autoPlay = true;
+  //   videoElement.playsInline = true;
+  //   videoElement.srcObject = stream;
+  //   videoElement.className = "w-full h-full object-cover";
+
+  //   const videoContainer = document.createElement("div");
+  //   videoContainer.className =
+  //     "relative aspect-video bg-gray-800 rounded-lg overflow-hidden";
+  //   videoContainer.appendChild(videoElement);
+
+  //   const labelContainer = document.createElement("div");
+  //   labelContainer.className =
+  //     "absolute bottom-4 left-4 bg-black bg-opacity-50 px-2 py-1 rounded-md text-white";
+  //   labelContainer.textContent = id === "localVideo" ? "You" : "Participant";
+  //   videoContainer.appendChild(labelContainer);
+
+  //   document.getElementById("videos")?.appendChild(videoContainer);
+  //   setParticipantCount((prev) => prev + 1);
+  // };
+
+  function addVideoStream(stream, id) {
+    removeVideo(id); // Remove any existing video element with the same ID
     const videoElement = document.createElement("video");
     videoElement.id = id;
-    videoElement.autoPlay = true;
-    videoElement.playsInline = true;
+    videoElement.autoplay = true;
+    videoElement.playsinline = true;
     videoElement.srcObject = stream;
-    videoElement.className = "w-full h-full object-cover";
-
-    const videoContainer = document.createElement("div");
-    videoContainer.className =
-      "relative aspect-video bg-gray-800 rounded-lg overflow-hidden";
-    videoContainer.appendChild(videoElement);
-
-    const labelContainer = document.createElement("div");
-    labelContainer.className =
-      "absolute bottom-4 left-4 bg-black bg-opacity-50 px-2 py-1 rounded-md text-white";
-    labelContainer.textContent = id === "localVideo" ? "You" : "Participant";
-    videoContainer.appendChild(labelContainer);
-
-    document.getElementById("videos")?.appendChild(videoContainer);
+    document.getElementById("videos").appendChild(videoElement);
     setParticipantCount((prev) => prev + 1);
-  };
+  }
 
   const removeVideo = (id) => {
     const videoElement = document.getElementById(id);
@@ -397,7 +407,7 @@ const Room = () => {
           >
             {videoMuted ? <VideoOff /> : <Video />}
           </button>
-          <button
+          {/* <button
             onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
             className={`p-3 rounded-full hover:bg-gray-700 ${
               isScreenSharing ? "bg-blue-500 hover:bg-blue-600" : ""
@@ -405,7 +415,7 @@ const Room = () => {
             title={isScreenSharing ? "Stop sharing" : "Share screen"}
           >
             <Share />
-          </button>
+          </button> */}
           <button
             onClick={() => setShowChat(!showChat)}
             className={`p-3 rounded-full hover:bg-gray-700 ${
