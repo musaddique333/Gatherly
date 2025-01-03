@@ -51,11 +51,9 @@ Before you begin, ensure you have the following installed:
 1. **Clone the Repository**:
 
    ```bash
-   git clone <repository-url>
+   git clone https://gitlab.com/Ritz1110/DodgyGeezers.git
    cd gatherly
    ```
-
-   ***Repository link***: https://gitlab.com/Ritz1110/DodgyGeezers.git
 
 
 2. **Create `.env.production` File**:
