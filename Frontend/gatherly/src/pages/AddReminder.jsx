@@ -10,14 +10,16 @@ const AddReminder = () => {
 
     const handleSubmit = (e)=>{
         e.preventDefault();
-        const reminderDate = new Date(reminderTime);
-        const isoReminderTime = reminderDate.toISOString();
-        console.log(isoReminderTime);
+        const formattedDate = new Date(reminderTime).toISOString();
+        console.log("event" + eventId);
+        console.log("reminder" + reminderTime);
+        console.log("Formatted" + formattedDate);
+        console.log(localStorage.getItem("userId"));
         eventAxiosInstance.post("/reminder/", {
             params:{
-                    event_id:eventId,
-                    user_email: localStorage.getItem("userId"),
-                    reminder_time: isoReminderTime
+                event_id:eventId,
+                user_email: localStorage.getItem("userId"),
+                reminder_time: formattedDate
             }
         })
     }

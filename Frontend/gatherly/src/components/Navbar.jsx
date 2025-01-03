@@ -111,8 +111,8 @@ const Navbar = () => {
         <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           <NavbarButton to="/">{constants.general.home}</NavbarButton>
           {token && <NavbarButton to ="/user/dashboard">User Dashboard</NavbarButton>}
-          <NavbarButton to="/video">{constants.general.Video}</NavbarButton>
-          <NavbarButton to="/user/reminders">Reminders</NavbarButton>
+          {token && <NavbarButton to="/video">{constants.general.Video}</NavbarButton>}
+          {token && <NavbarButton to="/user/reminders">Reminders</NavbarButton>}
           {token ? (
             <NavbarButton to ="/login" onClick={handleLogout}>{constants.general.logout}</NavbarButton>
           ) : (
