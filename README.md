@@ -207,8 +207,8 @@ Adminer is available at `localhost:8080` and provides a simple interface to inte
 
 ## Project video and report links
 
-### Project video  - [Some google drive link](https://drive.google.com/file/d/1PisWT-mcSZv-xc7QSIRk2EbNajM4gzPy/view?usp=sharing)
-### Project report - [Some google dricv link](https://drive.google.com/file/d/1zdGHD76LZGzfLlmaIDISYlYp-MSgXg7I/view?usp=sharing)
+### Project video  - [CLICK HERE](https://drive.google.com/file/d/1PisWT-mcSZv-xc7QSIRk2EbNajM4gzPy/view?usp=sharing)
+### Project report - [CLICK HERE](https://drive.google.com/file/d/1zdGHD76LZGzfLlmaIDISYlYp-MSgXg7I/view?usp=sharing)
 
 ---
 
